@@ -8,6 +8,7 @@ import {
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import type { Ref } from 'react';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
@@ -24,26 +25,39 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
-          </TabTrigger>
+          {/*<TabTrigger name="explore" href="/explore" asChild>*/}
+          {/*  <TabButton>Explore</TabButton>*/}
+          {/*</TabTrigger>*/}
         </CustomTabList>
       </TabList>
     </Tabs>
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+type TabButtonProps = Omit<TabTriggerSlotProps, 'ref'> & {
+  ref?: Ref<View>;
+};
+
+export function TabButton({
+                            children,
+                            isFocused,
+                            ref,
+                            ...props
+                          }: TabButtonProps) {
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
-          {children}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+      <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
+        <ThemedView
+            type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
+            style={styles.tabButtonView}
+        >
+          <ThemedText
+              type="small"
+              themeColor={isFocused ? 'text' : 'textSecondary'}
+          >
+            {children}
+          </ThemedText>
+        </ThemedView>
+      </Pressable>
   );
 }
 
