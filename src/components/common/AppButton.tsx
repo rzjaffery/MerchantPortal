@@ -1,13 +1,9 @@
-
-import {
-    ActivityIndicator,
-    Pressable,
-    StyleSheet,
-    Text,
-} from 'react-native';
+// src/components/common/AppButton.tsx
+import { StyleSheet } from 'react-native';
+import { Button } from 'react-native-paper';
 
 import { colors } from '@/theme/colors';
-import { dimensions, radius, spacing } from '@/theme/metrics';
+import { dimensions, radius } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline';
@@ -20,6 +16,13 @@ interface AppButtonProps {
     loading?: boolean;
 }
 
+// Our variant names mapped to React Native Paper's button modes.
+const paperModes = {
+    primary: 'contained',
+    secondary: 'contained-tonal',
+    outline: 'outlined',
+} as const;
+
 export default function AppButton({
                                       title,
                                       onPress,
@@ -27,95 +30,46 @@ export default function AppButton({
                                       disabled = false,
                                       loading = false,
                                   }: AppButtonProps) {
-    const isDisabled = disabled || loading;
-
-    const buttonVariant = {
-        primary: styles.primary,
-        secondary: styles.secondary,
-        outline: styles.outline,
-    }[variant];
-
-    const textVariant =
-        variant === 'primary'
-            ? styles.primaryText
-            : styles.secondaryText;
-
     return (
-        <Pressable
-            accessibilityRole="button"
-            accessibilityState={{
-                disabled: isDisabled,
-                busy: loading,
-            }}
-            onPress={onPress}
-            disabled={isDisabled}
-            style={({ pressed }) => [
+        <Button
+            mode={paperModes[variant]}
+            // Ignore taps while a request is running.
+            onPress={loading ? () => {} : onPress}
+            loading={loading}
+            disabled={disabled}
+            textColor={
+                variant === 'primary'
+                    ? colors.brand.onPrimary
+                    : colors.text.primary
+            }
+            style={[
                 styles.button,
-                buttonVariant,
-                pressed && styles.pressed,
-                isDisabled && styles.disabled,
+                variant === 'outline' && styles.outline,
             ]}
+            contentStyle={styles.content}
+            labelStyle={styles.label}
         >
-            {loading ? (
-                <ActivityIndicator
-                    color={
-                        variant === 'primary'
-                            ? colors.brand.onPrimary
-                            : colors.text.primary
-                    }
-                />
-            ) : (
-                <Text style={[styles.label, textVariant]}>
-                    {title}
-                </Text>
-            )}
-        </Pressable>
+            {title}
+        </Button>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        height: dimensions.buttonHeight,
-        borderRadius: radius.lg,
-        paddingHorizontal: spacing.xl,
-        alignItems: 'center',
-        justifyContent: 'center',
         width: '100%',
-    },
-
-    primary: {
-        backgroundColor: colors.brand.primary,
-    },
-
-    secondary: {
-        backgroundColor: colors.brand.soft,
+        borderRadius: radius.lg,
     },
 
     outline: {
         backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
+    },
+
+    content: {
+        height: dimensions.buttonHeight,
     },
 
     label: {
         fontFamily: fontFamilies.semiBold,
         fontSize: 15,
-        lineHeight: 20,
-    },
-
-    primaryText: {
-        color: colors.brand.onPrimary,
-    },
-
-    secondaryText: {
-        color: colors.text.primary,
-    },
-
-    pressed: {
-        opacity: 0.8,
-    },
-
-    disabled: {
-        opacity: 0.5,
     },
 });

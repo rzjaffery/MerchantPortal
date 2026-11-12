@@ -1,15 +1,13 @@
-
+// src/components/common/AppInput.tsx
 import { useState } from 'react';
 
 import {
-    Pressable,
     StyleSheet,
-    Text,
-    TextInput,
     View,
     type TextInputProps,
 } from 'react-native';
 
+import { HelperText, TextInput } from 'react-native-paper';
 import { SymbolView } from 'expo-symbols';
 
 import { colors } from '@/theme/colors';
@@ -43,64 +41,70 @@ export default function AppInput({
                                  }: AppInputProps) {
     const [passwordVisible, setPasswordVisible] = useState(false);
 
-    const shouldHideText =
-        secureTextEntry && !passwordVisible;
+    const shouldHideText = secureTextEntry && !passwordVisible;
 
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>{label}</Text>
-
-            <View
-                style={[
-                    styles.inputContainer,
-                    error ? styles.inputError : null,
-                ]}
-            >
-                <TextInput
-                    style={styles.input}
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor={colors.text.secondary}
-                    keyboardType={keyboardType}
-                    autoCapitalize={autoCapitalize}
-                    autoCorrect={false}
-                    secureTextEntry={shouldHideText}
-                    returnKeyType={returnKeyType}
-                    onSubmitEditing={onSubmitEditing}
-                    accessibilityLabel={label}
-                />
-
-                {secureTextEntry && (
-                    <Pressable
-                        onPress={() =>
-                            setPasswordVisible((visible) => !visible)
-                        }
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                            passwordVisible ? 'Hide password' : 'Show password'
-                        }
-                        style={styles.passwordToggle}
-                    >
-                        <SymbolView
-                            name={{
-                                ios: passwordVisible ? 'eye.slash' : 'eye',
-                                android: passwordVisible
-                                    ? 'visibility_off'
-                                    : 'visibility',
-                                web: passwordVisible
-                                    ? 'visibility_off'
-                                    : 'visibility',
-                            }}
-                            size={21}
-                            tintColor={colors.text.secondary}
+            <TextInput
+                mode="outlined"
+                label={label}
+                value={value}
+                onChangeText={onChangeText}
+                placeholder={placeholder}
+                keyboardType={keyboardType}
+                autoCapitalize={autoCapitalize}
+                autoCorrect={false}
+                secureTextEntry={shouldHideText}
+                returnKeyType={returnKeyType}
+                onSubmitEditing={onSubmitEditing}
+                error={Boolean(error)}
+                activeOutlineColor={colors.text.primary}
+                style={styles.input}
+                outlineStyle={styles.outline}
+                right={
+                    secureTextEntry ? (
+                        <TextInput.Icon
+                            // Keep the eye icon we already had.
+                            icon={({ size, color }) => (
+                                <SymbolView
+                                    name={{
+                                        ios: passwordVisible
+                                            ? 'eye.slash'
+                                            : 'eye',
+                                        android: passwordVisible
+                                            ? 'visibility_off'
+                                            : 'visibility',
+                                        web: passwordVisible
+                                            ? 'visibility_off'
+                                            : 'visibility',
+                                    }}
+                                    size={size}
+                                    tintColor={color}
+                                />
+                            )}
+                            onPress={() =>
+                                setPasswordVisible((visible) => !visible)
+                            }
+                            forceTextInputFocus={false}
+                            accessibilityLabel={
+                                passwordVisible
+                                    ? 'Hide password'
+                                    : 'Show password'
+                            }
                         />
-                    </Pressable>
-                )}
-            </View>
+                    ) : undefined
+                }
+            />
 
             {error ? (
-                <Text style={styles.errorText}>{error}</Text>
+                <HelperText
+                    type="error"
+                    visible
+                    padding="none"
+                    style={styles.errorText}
+                >
+                    {error}
+                </HelperText>
             ) : null}
         </View>
     );
@@ -112,51 +116,18 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
 
-    label: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        lineHeight: 20,
-        color: colors.text.primary,
-        marginBottom: spacing.sm,
-    },
-
-    inputContainer: {
-        height: dimensions.inputHeight,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.lg,
-        paddingHorizontal: spacing.lg,
-    },
-
-    inputError: {
-        borderColor: colors.status.error,
-    },
-
     input: {
-        flex: 1,
-        minWidth: 0,
-        height: '100%',
-        color: colors.text.primary,
+        height: dimensions.inputHeight,
+        backgroundColor: colors.surface,
         fontFamily: fontFamilies.regular,
         fontSize: 14,
-        paddingVertical: 0,
     },
 
-    passwordToggle: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
+    outline: {
+        borderRadius: radius.lg,
     },
 
     errorText: {
-        color: colors.status.error,
         fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        lineHeight: 18,
-        marginTop: spacing.xs,
     },
 });

@@ -12,6 +12,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
+import { PaperProvider } from 'react-native-paper';
+import { paperTheme } from '@/theme/paperTheme';
+
 import { Montserrat_400Regular } from '@expo-google-fonts/montserrat/400Regular';
 import { Montserrat_500Medium } from '@expo-google-fonts/montserrat/500Medium';
 import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat/600SemiBold';
@@ -89,9 +92,11 @@ export default function RootLayout() {
     }
 
     return (
-        <AuthProvider>
-            <AppNavigator />
-        </AuthProvider>
+        <PaperProvider theme={paperTheme}>
+            <AuthProvider>
+                <AppNavigator />
+            </AuthProvider>
+        </PaperProvider>
     );
 }
 
