@@ -81,25 +81,36 @@ export default function DashboardScreen() {
         void loadSummary();
     }, [loadSummary]);
 
+    // Formats an amount with its currency code, e.g. "CDF 248,000".
+    function formatAmount(currency: 'CDF' | 'USD', amount: number): string {
+        return `${currency} ${amount.toLocaleString()}`;
+    }
+
     const dashboardMetrics = summary
         ? [
             {
-                label: 'Orders',
-                value: summary.totalOrders.toLocaleString(),
-                detail: 'Total orders',
-                symbol: 'O',
+                label: 'Successful CDF',
+                value: formatAmount('CDF', summary.successfulAmountCDF),
+                detail: 'Completed payments',
+                symbol: 'S',
             },
             {
-                label: 'Revenue',
-                value: `Rs. ${summary.revenueAmount.toLocaleString()}`,
-                detail: 'Sample revenue',
-                symbol: 'R',
+                label: 'Successful USD',
+                value: formatAmount('USD', summary.successfulAmountUSD),
+                detail: 'Completed payments',
+                symbol: 'S',
             },
             {
-                label: 'Pending',
-                value: summary.pendingOrders.toLocaleString(),
-                detail: 'Awaiting action',
-                symbol: 'P',
+                label: 'Failed CDF',
+                value: formatAmount('CDF', summary.failedAmountCDF),
+                detail: 'Unsuccessful payments',
+                symbol: 'F',
+            },
+            {
+                label: 'Failed USD',
+                value: formatAmount('USD', summary.failedAmountUSD),
+                detail: 'Unsuccessful payments',
+                symbol: 'F',
             },
         ]
         : [];
@@ -439,14 +450,14 @@ const styles = StyleSheet.create({
     },
 
     metricsContainer: {
+        flexWrap: 'wrap',
         flexDirection: 'row',
         gap: spacing.sm,
         marginBottom: spacing.xxxl,
     },
 
     metricCard: {
-        flex: 1,
-        minWidth: 0,
+        width:"47%",
         padding: spacing.md,
     },
 

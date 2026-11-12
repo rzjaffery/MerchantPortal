@@ -1,24 +1,20 @@
-
+// src/services/dashboard/dashboardService.ts
 import type { DashboardSummary } from '@/types/dashboard';
 
 /**
  * Development-only dashboard data.
- *
- * Replace this implementation with the merchant
- * dashboard API when its documentation is available.
+ * We'll replace this with the real API call later.
  */
 const demoDashboardSummary: DashboardSummary = {
-    totalOrders: 1284,
-    revenueAmount: 248000,
-    pendingOrders: 18,
-    currency: 'PKR',
+    successfulAmountCDF: 248000,
+    successfulAmountUSD: 1250,
+    failedAmountCDF: 4000,
+    failedAmountUSD: 35,
 };
 
 /**
  * Retrieves the dashboard summary.
- *
- * The screen calls this function without needing to
- * know whether its data comes from a demo or an API.
+ * The screen doesn't need to know whether this data is demo or real.
  */
 export async function getDashboardSummary(): Promise<DashboardSummary> {
     return { ...demoDashboardSummary };
