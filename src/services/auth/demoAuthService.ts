@@ -1,4 +1,4 @@
-
+// src/services/auth/demoAuthService.ts
 import type {
     AuthSession,
     LoginCredentials,
@@ -7,21 +7,21 @@ import type {
 // Development-only demo credentials.
 // These are NOT real merchant credentials.
 export const DEMO_CREDENTIALS = {
-    email: 'merchant.demo@example.com',
+    username: 'demo.merchant',
     password: 'Demo123!',
 } as const;
 
 export async function signInWithDemo(
     credentials: LoginCredentials
 ): Promise<AuthSession> {
-    const email = credentials.email.trim().toLowerCase();
+    const username = credentials.username.trim().toLowerCase();
 
     const isValid =
-        email === DEMO_CREDENTIALS.email &&
+        username === DEMO_CREDENTIALS.username &&
         credentials.password === DEMO_CREDENTIALS.password;
 
     if (!isValid) {
-        throw new Error('Invalid email or password.');
+        throw new Error('Invalid username or password.');
     }
 
     return {
@@ -30,8 +30,9 @@ export async function signInWithDemo(
 
         user: {
             id: 'merchant-001',
+            username: DEMO_CREDENTIALS.username,
             fullName: 'Demo Merchant',
-            email: DEMO_CREDENTIALS.email,
+            email: 'merchant.demo@example.com',
             role: 'MERCHANT',
             status: 'ACTIVE',
         },

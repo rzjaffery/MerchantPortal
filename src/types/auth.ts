@@ -1,3 +1,4 @@
+// src/types/auth.ts
 
 export type MerchantRole = 'MERCHANT';
 
@@ -5,6 +6,8 @@ export type MerchantStatus = 'ACTIVE' | 'SUSPENDED';
 
 export interface MerchantUser {
     id: string;
+    // The login name. The server needs it on every request.
+    username: string;
     fullName: string;
     email: string;
     role: MerchantRole;
@@ -12,7 +15,7 @@ export interface MerchantUser {
 }
 
 export interface LoginCredentials {
-    email: string;
+    username: string;
     password: string;
 }
 

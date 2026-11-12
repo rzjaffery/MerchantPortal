@@ -26,27 +26,20 @@ export default function LoginScreen() {
     const router = useRouter();
     const { signIn } = useAuth();
 
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
-    const [emailError, setEmailError] = useState('');
+    const [usernameError, setUsernameError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [authError, setAuthError] = useState('');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleLogin() {
-        const cleanEmail = email.trim();
+        const cleanUsername = username.trim();
 
-        const validEmail =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail);
-
-        setEmailError(
-            !cleanEmail
-                ? 'Please enter your email address.'
-                : !validEmail
-                    ? 'Please enter a valid email address.'
-                    : ''
+        setUsernameError(
+            !cleanUsername ? 'Please enter your username.' : ''
         );
 
         setPasswordError(
@@ -55,7 +48,7 @@ export default function LoginScreen() {
 
         setAuthError('');
 
-        if (!validEmail || !password) {
+        if (!cleanUsername || !password) {
             return;
         }
 
@@ -63,7 +56,7 @@ export default function LoginScreen() {
 
         try {
             await signIn({
-                email: cleanEmail,
+                username: cleanUsername,
                 password,
             });
 
@@ -125,17 +118,16 @@ export default function LoginScreen() {
                             </Text>
 
                             <AppInput
-                                label="Email Address"
-                                value={email}
+                                label="Username"
+                                value={username}
                                 onChangeText={(value) => {
-                                    setEmail(value);
-                                    setEmailError('');
+                                    setUsername(value);
+                                    setUsernameError('');
                                     setAuthError('');
                                 }}
-                                placeholder="Enter your email"
-                                keyboardType="email-address"
+                                placeholder="Enter your username"
                                 autoCapitalize="none"
-                                error={emailError}
+                                error={usernameError}
                             />
 
                             <AppInput

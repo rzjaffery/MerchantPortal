@@ -28,6 +28,7 @@ function isValidSession(value: unknown): value is AuthSession {
 
     return (
         typeof user.id === 'string' &&
+        typeof user.username === 'string' &&
         typeof user.fullName === 'string' &&
         typeof user.email === 'string' &&
         user.role === 'MERCHANT' &&
