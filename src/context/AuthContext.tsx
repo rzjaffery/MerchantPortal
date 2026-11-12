@@ -29,6 +29,7 @@ interface AuthContextValue {
     isLoading: boolean;
     signIn: (credentials: LoginCredentials) => Promise<void>;
     signOut: () => Promise<void>;
+    updateUser: (changes: Partial<MerchantUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -91,6 +92,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(null);
     }, []);
 
+    // Update some of the merchant's details, on screen and in storage.
+    const updateUser = useCallback(
+        async (changes: Partial<MerchantUser>) => {
+            if (session === null) {
+                return;
+            }
+
+            const updatedSession: AuthSession = {
+                ...session,
+                user: { ...session.user, ...changes },
+            };
+
+            await saveSession(updatedSession);
+
+            setSession(updatedSession);
+        },
+        [session]
+    );
+
     const value = useMemo<AuthContextValue>(
         () => ({
             user: session?.user ?? null,
@@ -98,8 +118,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             isLoading,
             signIn,
             signOut,
+            updateUser,
         }),
-        [session, isLoading, signIn, signOut]
+        [session, isLoading, signIn, signOut, updateUser]
     );
 
     return (

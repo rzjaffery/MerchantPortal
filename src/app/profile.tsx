@@ -24,13 +24,10 @@ import { fontFamilies } from '@/theme/typography';
 
 export default function ProfileScreen() {
     const router = useRouter();
-
-    const { user, signOut } = useAuth();
+    const { user, signOut, updateUser } = useAuth();
 
     const [isEditing, setIsEditing] = useState(false);
-    const [fullName, setFullName] = useState(
-        user?.fullName ?? 'Merchant'
-    );
+    const fullName = user?.fullName ?? 'Merchant';
     const [draftName, setDraftName] = useState(fullName);
 
     const [nameError, setNameError] = useState('');
@@ -52,7 +49,7 @@ export default function ProfileScreen() {
         setIsEditing(true);
     }
 
-    function handleSave() {
+    async function handleSave() {
         const cleanName = draftName.trim();
 
         if (!cleanName) {
@@ -60,13 +57,17 @@ export default function ProfileScreen() {
             return;
         }
 
-        setFullName(cleanName);
-        setIsEditing(false);
-        setNameError('');
+        try {
+            await updateUser({ fullName: cleanName });
 
-        setFeedback(
-            'Your profile changes have been updated locally.'
-        );
+            setIsEditing(false);
+            setNameError('');
+            setFeedback('Your name has been updated on this device.');
+        } catch (error) {
+            console.warn('Profile update failed:', error);
+
+            setFeedback('Unable to save your changes. Please try again.');
+        }
     }
 
     async function handleLogout() {
