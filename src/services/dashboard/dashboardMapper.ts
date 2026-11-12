@@ -4,9 +4,8 @@ import type {
     DashboardSummary,
 } from '@/types/dashboard';
 
-// The server sends amounts as text such as "0". Convert to a number,
-// and use 0 when the value is missing or not a number.
-function toNumber(value: string | null | undefined): number {
+// Convert text or number to a number, and use 0 when missing.
+function toNumber(value: string | number | null | undefined): number {
     const parsed = Number(value);
 
     return Number.isFinite(parsed) ? parsed : 0;
@@ -23,5 +22,7 @@ export function mapDashboardResponse(
         successfulAmountUSD: toNumber(graph?.successfulAmountUSD),
         failedAmountCDF: toNumber(graph?.failedAmountCDF),
         failedAmountUSD: toNumber(graph?.failedAmountUSD),
+        successfulSeries: toNumber(graph?.successfulSeries),
+        failedSeries: toNumber(graph?.failedSeries),
     };
 }

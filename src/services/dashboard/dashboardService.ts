@@ -1,21 +1,43 @@
 // src/services/dashboard/dashboardService.ts
-import type { DashboardSummary } from '@/types/dashboard';
+import { API_ENCRYPT_KEY, USE_DEMO_API } from '@/constants/api';
+import { postToMerchantApi } from '@/services/api/apiClient';
+import { mapDashboardResponse } from '@/services/dashboard/dashboardMapper';
 
-/**
- * Development-only dashboard data.
- * We'll replace this with the real API call later.
- */
+import type {
+    DashboardApiResponse,
+    DashboardPeriod,
+    DashboardSummary,
+} from '@/types/dashboard';
+
+// Used only when USE_DEMO_API is true.
 const demoDashboardSummary: DashboardSummary = {
     successfulAmountCDF: 248000,
     successfulAmountUSD: 1250,
     failedAmountCDF: 4000,
     failedAmountUSD: 35,
+    successfulSeries: 92,
+    failedSeries: 8,
 };
 
-/**
- * Retrieves the dashboard summary.
- * The screen doesn't need to know whether this data is demo or real.
- */
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-    return { ...demoDashboardSummary };
+// Retrieves the dashboard figures for one time period.
+export async function getDashboardSummary(
+    username: string,
+    token: string,
+    period: DashboardPeriod
+): Promise<DashboardSummary> {
+    if (USE_DEMO_API) {
+        return { ...demoDashboardSummary };
+    }
+
+    const response = await postToMerchantApi<DashboardApiResponse>(
+        'getdashboardinformation',
+        {
+            username,
+            token,
+            encryptkey: API_ENCRYPT_KEY,
+            combineddashboardgraph: { timePeriod: period },
+        }
+    );
+
+    return mapDashboardResponse(response);
 }

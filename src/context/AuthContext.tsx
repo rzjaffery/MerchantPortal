@@ -10,6 +10,8 @@ import {
 } from 'react';
 
 import { signInWithDemo } from '@/services/auth/demoAuthService';
+import { signInWithApi, signOutWithApi } from '@/services/auth/authService';
+import { USE_DEMO_API } from '@/constants/api';
 
 import {
     clearSession,
@@ -25,6 +27,7 @@ import type {
 
 interface AuthContextValue {
     user: MerchantUser | null;
+    accessToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     signIn: (credentials: LoginCredentials) => Promise<void>;
@@ -76,7 +79,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Authenticate and persist the returned session.
     const signIn = useCallback(
         async (credentials: LoginCredentials) => {
-            const newSession = await signInWithDemo(credentials);
+            const newSession = USE_DEMO_API
+                ? await signInWithDemo(credentials)
+                : await signInWithApi(credentials);
 
             await saveSession(newSession);
 
@@ -87,10 +92,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Remove the session and reset authentication state.
     const signOut = useCallback(async () => {
+        // Tell the server first, so the account isn't left logged in.
+        if (session !== null && !USE_DEMO_API) {
+            try {
+                await signOutWithApi(
+                    session.user.username,
+                    session.accessToken
+                );
+            } catch (error) {
+                // Log the reason only. Never log the token.
+                console.warn(
+                    'Server logout failed:',
+                    error instanceof Error ? error.message : 'Unknown error'
+                );
+            }
+        }
+
+        // Always clear the phone, even if the server call failed.
         await clearSession();
 
         setSession(null);
-    }, []);
+    }, [session]);
 
     // Update some of the merchant's details, on screen and in storage.
     const updateUser = useCallback(
@@ -114,6 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const value = useMemo<AuthContextValue>(
         () => ({
             user: session?.user ?? null,
+            accessToken: session?.accessToken ?? null,
             isAuthenticated: session !== null,
             isLoading,
             signIn,

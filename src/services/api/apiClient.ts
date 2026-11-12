@@ -7,6 +7,9 @@ export interface ApiResponse {
     respcode: string;
     respcodedesc: string;
 }
+// The server uses two codes for success:
+// '00' on dashboard and profile, '1000' on login and logout.
+const SUCCESS_CODES = ['00', '1000'];
 
 // An error we raise ourselves, with a code and a message.
 export class ApiError extends Error {
@@ -56,8 +59,8 @@ export async function postToMerchantApi<T extends ApiResponse>(
     }
 
     // The server reports business errors inside a 200 response,
-    // using respcode. Anything other than '00' is a failure.
-    if (data.respcode !== '00') {
+    // using respcode. Anything other than '00' or '1000' is a failure.
+    if (!SUCCESS_CODES.includes(data.respcode)) {
         throw new ApiError(data.respcodedesc || 'Request failed.', data.respcode);
     }
 

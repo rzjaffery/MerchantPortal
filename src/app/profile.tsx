@@ -11,6 +11,7 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Button, Dialog, Portal, Snackbar } from 'react-native-paper';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
@@ -33,6 +34,7 @@ export default function ProfileScreen() {
     const [nameError, setNameError] = useState('');
     const [feedback, setFeedback] = useState('');
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
 
     const initials = fullName
         .trim()
@@ -71,6 +73,7 @@ export default function ProfileScreen() {
     }
 
     async function handleLogout() {
+        setLogoutDialogVisible(false);
         setIsLoggingOut(true);
         setFeedback('');
 
@@ -215,19 +218,19 @@ export default function ProfileScreen() {
                     )}
                 </View>
 
-                {/* Feedback */}
-                {feedback ? (
-                    <View style={styles.feedbackBox}>
-                        <Text style={styles.feedbackText}>
-                            {feedback}
-                        </Text>
-                    </View>
-                ) : null}
+                {/* Feedback message */}
+                <Snackbar
+                    visible={feedback !== ''}
+                    onDismiss={() => setFeedback('')}
+                    duration={3000}
+                >
+                    {feedback}
+                </Snackbar>
 
                 {/* Logout */}
                 <View style={styles.logoutSection}>
                     <Pressable
-                        onPress={handleLogout}
+                        onPress={() => setLogoutDialogVisible(true)}
                         disabled={isLoggingOut}
                         accessibilityRole="button"
                         style={[
@@ -246,7 +249,44 @@ export default function ProfileScreen() {
                 </Text>
 
             </ScrollView>
+
+            {/* Logout confirmation */}
+            <Portal>
+                <Dialog
+                    visible={logoutDialogVisible}
+                    onDismiss={() => setLogoutDialogVisible(false)}
+                    style={styles.dialog}
+                >
+                    <Dialog.Title style={styles.dialogTitle}>
+                        Log out?
+                    </Dialog.Title>
+
+                    <Dialog.Content>
+                        <Text style={styles.dialogText}>
+                            You will need to sign in again to
+                            use Merchant Portal.
+                        </Text>
+                    </Dialog.Content>
+
+                    <Dialog.Actions>
+                        <Button
+                            textColor={colors.text.secondary}
+                            onPress={() => setLogoutDialogVisible(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            textColor={colors.status.error}
+                            onPress={handleLogout}
+                        >
+                            Log Out
+                        </Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
         </SafeAreaView>
+
     );
 }
 
@@ -419,19 +459,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
 
-    feedbackBox: {
-        padding: spacing.lg,
-        borderRadius: radius.md,
-        backgroundColor: colors.brand.soft,
-        marginBottom: spacing.xl,
-    },
-
-    feedbackText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        lineHeight: 19,
-        color: colors.text.primary,
-    },
+    
 
     logoutSection: {
         marginTop: spacing.sm,
@@ -455,6 +483,24 @@ const styles = StyleSheet.create({
 
     disabledButton: {
         opacity: 0.5,
+    },
+
+    dialog: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.xl,
+    },
+
+    dialogTitle: {
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 18,
+        color: colors.text.primary,
+    },
+
+    dialogText: {
+        fontFamily: fontFamilies.regular,
+        fontSize: 13,
+        lineHeight: 21,
+        color: colors.text.secondary,
     },
 
     footer: {
