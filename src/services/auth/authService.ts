@@ -65,6 +65,7 @@ export async function signInWithApi(
                 clean(response.userid) ||
                 clean(response.merchantid) ||
                 username,
+            merchantId: clean(response.merchantid),
             username,
             fullName,
             email: clean(response.emailaddress),

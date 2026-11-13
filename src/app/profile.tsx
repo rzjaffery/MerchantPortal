@@ -172,51 +172,7 @@ export default function ProfileScreen() {
                         />
                     </AppCard>
                 </View>
-
-                {/* Edit Profile */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>
-                        Profile Settings
-                    </Text>
-
-                    {isEditing ? (
-                        <AppCard style={styles.editCard}>
-                            <AppInput
-                                label="Full Name"
-                                value={draftName}
-                                onChangeText={(value) => {
-                                    setDraftName(value);
-                                    setNameError('');
-                                }}
-                                placeholder="Enter your full name"
-                                autoCapitalize="words"
-                                error={nameError}
-                            />
-
-                            <AppButton
-                                title="Save Changes"
-                                onPress={handleSave}
-                            />
-
-                            <View style={styles.cancelButton}>
-                                <AppButton
-                                    title="Cancel"
-                                    variant="outline"
-                                    onPress={() => {
-                                        setIsEditing(false);
-                                        setNameError('');
-                                    }}
-                                />
-                            </View>
-                        </AppCard>
-                    ) : (
-                        <AppButton
-                            title="Edit Profile"
-                            variant="outline"
-                            onPress={handleEdit}
-                        />
-                    )}
-                </View>
+                
 
                 {/* Feedback message */}
                 <Snackbar
@@ -459,7 +415,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
 
-    
+
 
     logoutSection: {
         marginTop: spacing.sm,

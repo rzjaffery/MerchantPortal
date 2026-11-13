@@ -12,6 +12,7 @@ import {
 import { signInWithDemo } from '@/services/auth/demoAuthService';
 import { signInWithApi, signOutWithApi } from '@/services/auth/authService';
 import { USE_DEMO_API } from '@/constants/api';
+import { getMerchantProfile } from '@/services/profile/profileService';
 
 import {
     clearSession,
@@ -79,10 +80,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Authenticate and persist the returned session.
     const signIn = useCallback(
         async (credentials: LoginCredentials) => {
-            const newSession = USE_DEMO_API
+            let newSession = USE_DEMO_API
                 ? await signInWithDemo(credentials)
                 : await signInWithApi(credentials);
 
+            // Login has no name or email, so read them from the profile.
+            // If this fails, the user still gets in and sees their username.
+            if (!USE_DEMO_API && newSession.user.merchantId) {
+                try {
+                    const profile = await getMerchantProfile(
+                        newSession.user.merchantId
+                    );
+
+                    newSession = {
+                        ...newSession,
+                        user: {
+                            ...newSession.user,
+                            fullName: profile.fullName,
+                            email: profile.email,
+                        },
+                    };
+                } catch (error) {
+                    console.warn(
+                        'Profile load failed:',
+                        error instanceof Error
+                            ? error.message
+                            : 'Unknown error'
+                    );
+                }
+            }
             await saveSession(newSession);
 
             setSession(newSession);

@@ -6,7 +6,7 @@ export type MerchantStatus = 'ACTIVE' | 'SUSPENDED';
 
 export interface MerchantUser {
     id: string;
-    // The login name. The server needs it on every request.
+    merchantId: string;
     username: string;
     fullName: string;
     email: string;

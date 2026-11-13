@@ -30,6 +30,7 @@ export async function signInWithDemo(
 
         user: {
             id: 'merchant-001',
+            merchantId: 'demo-merchant',
             username: DEMO_CREDENTIALS.username,
             fullName: 'Demo Merchant',
             email: 'merchant.demo@example.com',
