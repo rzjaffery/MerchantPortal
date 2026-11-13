@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import {
     StyleSheet,
+    Text,
     View,
     type TextInputProps,
 } from 'react-native';
@@ -45,9 +46,10 @@ export default function AppInput({
 
     return (
         <View style={styles.container}>
+            <Text style={styles.label}>{label}</Text>
             <TextInput
                 mode="outlined"
-                label={label}
+                accessibilityLabel={label}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
@@ -121,6 +123,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surface,
         fontFamily: fontFamilies.regular,
         fontSize: 14,
+    },
+
+    label: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 13,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
 
     outline: {

@@ -1,7 +1,6 @@
-
-import { useState } from 'react';
-
+// src/app/profile.tsx
 import {
+    ActivityIndicator,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -9,202 +8,319 @@ import {
     View,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, Dialog, Portal, Snackbar } from 'react-native-paper';
+import { SymbolView } from 'expo-symbols';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
-import AppInput from '@/components/common/AppInput';
+import AppHeader from '@/components/common/AppHeader';
 
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { getMerchantProfile } from '@/services/profile/profileService';
+
+import type { MerchantProfile } from '@/types/profile';
 
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
+// Icon names for each platform.
+const icons = {
+    person: { ios: 'person', android: 'person', web: 'person' },
+    store: { ios: 'storefront', android: 'storefront', web: 'storefront' },
+    badge: { ios: 'person.text.rectangle', android: 'badge', web: 'badge' },
+    mail: { ios: 'envelope', android: 'mail', web: 'mail' },
+    call: { ios: 'phone', android: 'call', web: 'call' },
+    lock: { ios: 'lock', android: 'lock', web: 'lock' },
+} as const;
+
+// Formats money with two decimals, e.g. 10,854.44
+function formatAmount(amount: number): string {
+    return amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
 export default function ProfileScreen() {
     const router = useRouter();
-    const { user, signOut, updateUser } = useAuth();
+    const { user, signOut } = useAuth();
+    const { t } = useLanguage();
 
-    const [isEditing, setIsEditing] = useState(false);
-    const fullName = user?.fullName ?? 'Merchant';
-    const [draftName, setDraftName] = useState(fullName);
+    const [profile, setProfile] = useState<MerchantProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
 
-    const [nameError, setNameError] = useState('');
-    const [feedback, setFeedback] = useState('');
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
+    const [feedback, setFeedback] = useState('');
 
-    const initials = fullName
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
+    const merchantId = user?.merchantId ?? '';
 
-    function handleEdit() {
-        setDraftName(fullName);
-        setNameError('');
-        setFeedback('');
-        setIsEditing(true);
-    }
-
-    async function handleSave() {
-        const cleanName = draftName.trim();
-
-        if (!cleanName) {
-            setNameError('Name cannot be empty.');
+    const loadProfile = useCallback(async () => {
+        if (!merchantId) {
+            setIsLoading(false);
             return;
         }
 
+        setIsLoading(true);
+        setHasError(false);
+
         try {
-            await updateUser({ fullName: cleanName });
+            const data = await getMerchantProfile(merchantId);
 
-            setIsEditing(false);
-            setNameError('');
-            setFeedback('Your name has been updated on this device.');
-        } catch (error) {
-            console.warn('Profile update failed:', error);
-
-            setFeedback('Unable to save your changes. Please try again.');
+            setProfile(data);
+        } catch {
+            setHasError(true);
+        } finally {
+            setIsLoading(false);
         }
-    }
+    }, [merchantId]);
+
+    useEffect(() => {
+        void loadProfile();
+    }, [loadProfile]);
 
     async function handleLogout() {
         setLogoutDialogVisible(false);
         setIsLoggingOut(true);
-        setFeedback('');
 
         try {
             await signOut();
+
             router.replace('/login');
         } catch (error) {
             console.warn('Logout failed:', error);
 
+            setFeedback(t('logOutFailed'));
             setIsLoggingOut(false);
-            setFeedback('Unable to log out. Please try again.');
         }
     }
 
+    // The website shows type 1 as "Merchant". Other codes are shown as sent.
+    const merchantTypeLabel =
+        profile?.merchantType === '1'
+            ? t('merchant')
+            : profile?.merchantType ?? '';
+
+    // Rows with no value are left out.
+    const infoRows = [
+        {
+            key: 'username',
+            icon: icons.person,
+            label: t('username'),
+            value: user?.username ?? '',
+        },
+        {
+            key: 'business',
+            icon: icons.store,
+            label: t('businessName'),
+            value: profile?.businessName ?? '',
+        },
+        {
+            key: 'type',
+            icon: icons.store,
+            label: t('merchantType'),
+            value: merchantTypeLabel,
+        },
+        {
+            key: 'id',
+            icon: icons.badge,
+            label: t('merchantId'),
+            value: profile?.merchantId || merchantId,
+        },
+        {
+            key: 'email',
+            icon: icons.mail,
+            label: t('email'),
+            value: profile?.email || user?.email || '',
+        },
+        {
+            key: 'mobile',
+            icon: icons.call,
+            label: t('mobileNumber'),
+            value: profile?.mobileNumber ?? '',
+        },
+    ].filter((row) => row.value !== '');
+
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.screen}>
+            <AppHeader
+                title={t('myProfile')}
+                leftIcon="back"
+                onLeftPress={() => router.back()}
+            />
+
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
             >
 
                 {/* Header */}
-                <View style={styles.header}>
-                    <Pressable
-                        onPress={() => router.replace('/dashboard')}
-                        style={styles.backButton}
-                        accessibilityRole="button"
-                        accessibilityLabel="Back to dashboard"
-                    >
-                        <Text style={styles.backArrow}>‹</Text>
-                    </Pressable>
-
-                    <Text style={styles.headerTitle}>
-                        My Profile
-                    </Text>
-
-                    <View style={styles.headerSpacer} />
-                </View>
-
-                {/* Profile Identity */}
-                <View style={styles.identitySection}>
+                <AppCard style={[styles.card, styles.headerCard]}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {initials || 'M'}
-                        </Text>
+                        <SymbolView
+                            name={icons.person}
+                            size={36}
+                            tintColor={colors.text.secondary}
+                        />
                     </View>
 
-                    <Text style={styles.name}>
-                        {fullName}
+                    <Text style={styles.username}>
+                        {user?.username ?? ''}
                     </Text>
 
-                    <Text style={styles.email}>
-                        {user?.email ?? 'Email unavailable'}
-                    </Text>
+                    {merchantTypeLabel ? (
+                        <View style={styles.roleTag}>
+                            <Text style={styles.roleTagText}>
+                                {merchantTypeLabel}
+                            </Text>
+                        </View>
+                    ) : null}
+                </AppCard>
 
-                    <View style={styles.statusBadge}>
-                        <View style={styles.statusDot} />
+                {isLoading ? (
+                    <View style={styles.stateContainer}>
+                        <ActivityIndicator
+                            size="large"
+                            color={colors.brand.primary}
+                        />
 
-                        <Text style={styles.statusText}>
-                            {user?.status ?? 'UNKNOWN'}
+                        <Text style={styles.mutedText}>
+                            {t('loadingProfile')}
                         </Text>
                     </View>
-                </View>
+                ) : hasError ? (
+                    <View style={styles.stateContainer}>
+                        <Text style={styles.errorText}>
+                            {t('profileLoadFailed')}
+                        </Text>
 
-                {/* Account Information */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>
-                        Account Information
+                        <AppButton
+                            title={t('tryAgain')}
+                            variant="outline"
+                            onPress={() => void loadProfile()}
+                        />
+                    </View>
+                ) : profile ? (
+                    /* Wallet balances */
+                    <View style={styles.balanceGrid}>
+                        <AppCard style={styles.balanceCard}>
+                            <Text style={styles.balanceLabel}>
+                                {t('usdBalance')}
+                            </Text>
+
+                            <Text style={styles.balanceValue}>
+                                {formatAmount(profile.usdBalance)}
+                            </Text>
+                        </AppCard>
+
+                        <AppCard style={styles.balanceCard}>
+                            <Text style={styles.balanceLabel}>
+                                {t('cdfBalance')}
+                            </Text>
+
+                            <Text style={styles.balanceValue}>
+                                {formatAmount(profile.cdfBalance)}
+                            </Text>
+                        </AppCard>
+                    </View>
+                ) : null}
+
+                {/* Details */}
+                <AppCard style={styles.card}>
+                    {infoRows.map((row, index) => (
+                        <View
+                            key={row.key}
+                            style={[
+                                styles.infoRow,
+                                index > 0 && styles.rowDivider,
+                            ]}
+                        >
+                            <View style={styles.rowIcon}>
+                                <SymbolView
+                                    name={row.icon}
+                                    size={18}
+                                    tintColor={colors.text.primary}
+                                />
+                            </View>
+
+                            <View style={styles.rowTextBox}>
+                                <Text style={styles.rowLabel}>
+                                    {row.label}
+                                </Text>
+
+                                <Text style={styles.rowValue}>
+                                    {row.value}
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
+                </AppCard>
+
+                {/* Security (the PIN screens are a later step) */}
+                <AppCard style={styles.card}>
+                    <Text style={styles.cardTitle}>
+                        {t('security')}
                     </Text>
 
-                    <AppCard>
-                        <InfoRow
-                            label="Full Name"
-                            value={fullName}
-                        />
+                    {[t('updatePin'), t('resetPin')].map((title) => (
+                        <View
+                            key={title}
+                            style={[styles.infoRow, styles.rowDivider]}
+                        >
+                            <View style={styles.rowIcon}>
+                                <SymbolView
+                                    name={icons.lock}
+                                    size={18}
+                                    tintColor={colors.text.primary}
+                                />
+                            </View>
 
-                        <View style={styles.divider} />
+                            <Text style={[styles.rowValue, styles.rowTextBox]}>
+                                {title}
+                            </Text>
 
-                        <InfoRow
-                            label="Email Address"
-                            value={user?.email ?? 'Not available'}
-                        />
+                            <Text style={styles.rowLabel}>
+                                {t('soon')}
+                            </Text>
+                        </View>
+                    ))}
+                </AppCard>
 
-                        <View style={styles.divider} />
-
-                        <InfoRow
-                            label="Account Role"
-                            value={user?.role ?? 'MERCHANT'}
-                        />
-
-                        <View style={styles.divider} />
-
-                        <InfoRow
-                            label="Account Status"
-                            value={user?.status ?? 'UNKNOWN'}
-                        />
-                    </AppCard>
-                </View>
-                
-
-                {/* Feedback message */}
-                <Snackbar
-                    visible={feedback !== ''}
-                    onDismiss={() => setFeedback('')}
-                    duration={3000}
+                {/* Log out */}
+                <Pressable
+                    onPress={() => setLogoutDialogVisible(true)}
+                    disabled={isLoggingOut}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                        styles.logoutButton,
+                        pressed && styles.pressed,
+                        isLoggingOut && styles.disabled,
+                    ]}
                 >
-                    {feedback}
-                </Snackbar>
-
-                {/* Logout */}
-                <View style={styles.logoutSection}>
-                    <Pressable
-                        onPress={() => setLogoutDialogVisible(true)}
-                        disabled={isLoggingOut}
-                        accessibilityRole="button"
-                        style={[
-                            styles.logoutButton,
-                            isLoggingOut && styles.disabledButton,
-                        ]}
-                    >
+                    {isLoggingOut ? (
+                        <ActivityIndicator color={colors.status.error} />
+                    ) : (
                         <Text style={styles.logoutText}>
-                            {isLoggingOut ? 'Logging out...' : 'Log Out'}
+                            {t('logOut')}
                         </Text>
-                    </Pressable>
-                </View>
-
-                <Text style={styles.footer}>
-                    Merchant Portal V0.1
-                </Text>
+                    )}
+                </Pressable>
 
             </ScrollView>
+
+            {/* Feedback message */}
+            <Snackbar
+                visible={feedback !== ''}
+                onDismiss={() => setFeedback('')}
+                duration={3000}
+            >
+                {feedback}
+            </Snackbar>
 
             {/* Logout confirmation */}
             <Portal>
@@ -214,13 +330,12 @@ export default function ProfileScreen() {
                     style={styles.dialog}
                 >
                     <Dialog.Title style={styles.dialogTitle}>
-                        Log out?
+                        {t('logOutQuestion')}
                     </Dialog.Title>
 
                     <Dialog.Content>
-                        <Text style={styles.dialogText}>
-                            You will need to sign in again to
-                            use Merchant Portal.
+                        <Text style={styles.mutedText}>
+                            {t('logOutBody')}
                         </Text>
                     </Dialog.Content>
 
@@ -229,206 +344,174 @@ export default function ProfileScreen() {
                             textColor={colors.text.secondary}
                             onPress={() => setLogoutDialogVisible(false)}
                         >
-                            Cancel
+                            {t('cancel')}
                         </Button>
 
                         <Button
                             textColor={colors.status.error}
                             onPress={handleLogout}
                         >
-                            Log Out
+                            {t('logOut')}
                         </Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
-        </SafeAreaView>
-
-    );
-}
-
-interface InfoRowProps {
-    label: string;
-    value: string;
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
-    return (
-        <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-                {label}
-            </Text>
-
-            <Text style={styles.infoValue}>
-                {value}
-            </Text>
+            <View >
+                <Text>
+                    version 1.0.0
+                </Text>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screen: {
         flex: 1,
         backgroundColor: colors.background,
     },
 
     scrollContent: {
-        padding: spacing.xl,
+        padding: spacing.lg,
         paddingBottom: spacing.xxxl,
     },
 
-    header: {
-        flexDirection: 'row',
+    card: {
+        marginBottom: spacing.md,
+    },
+
+    headerCard: {
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: spacing.xxxl,
-    },
-
-    backButton: {
-        width: 42,
-        height: 42,
-        borderRadius: radius.md,
-        backgroundColor: colors.surface,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-
-    backArrow: {
-        fontSize: 30,
-        lineHeight: 34,
-        color: colors.text.primary,
-    },
-
-    headerTitle: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 19,
-        color: colors.text.primary,
-    },
-
-    headerSpacer: {
-        width: 42,
-    },
-
-    identitySection: {
-        alignItems: 'center',
-        marginBottom: spacing.xxxl,
+        paddingVertical: spacing.xl,
     },
 
     avatar: {
-        width: 88,
-        height: 88,
+        width: 80,
+        height: 80,
         borderRadius: radius.full,
-        backgroundColor: colors.brand.primary,
-        justifyContent: 'center',
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
         alignItems: 'center',
-        marginBottom: spacing.lg,
+        justifyContent: 'center',
+        marginBottom: spacing.md,
     },
 
-    avatarText: {
+    username: {
         fontFamily: fontFamilies.bold,
-        fontSize: 29,
-        color: colors.brand.onPrimary,
-    },
-
-    name: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 22,
+        fontSize: 18,
         color: colors.text.primary,
     },
 
-    email: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        color: colors.text.secondary,
+    roleTag: {
         marginTop: spacing.sm,
-    },
-
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#E5F5ED',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.xs,
         borderRadius: radius.full,
-        marginTop: spacing.md,
-        gap: spacing.sm,
+        backgroundColor: colors.brand.soft,
     },
 
-    statusDot: {
-        width: 7,
-        height: 7,
-        borderRadius: radius.full,
-        backgroundColor: colors.status.success,
-    },
-
-    statusText: {
+    roleTagText: {
         fontFamily: fontFamilies.semiBold,
-        fontSize: 10,
-        color: colors.status.success,
-    },
-
-    section: {
-        marginBottom: spacing.xxl,
-    },
-
-    sectionTitle: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 16,
+        fontSize: 11,
         color: colors.text.primary,
+    },
+
+    stateContainer: {
+        minHeight: 120,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: spacing.md,
         marginBottom: spacing.md,
+    },
+
+    mutedText: {
+        fontFamily: fontFamilies.regular,
+        fontSize: 13,
+        lineHeight: 20,
+        color: colors.text.secondary,
+    },
+
+    errorText: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 13,
+        color: colors.status.error,
+        textAlign: 'center',
+    },
+
+    balanceGrid: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+    },
+
+    balanceCard: {
+        flex: 1,
+        padding: spacing.md,
+    },
+
+    balanceLabel: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 11,
+        color: colors.text.secondary,
+    },
+
+    balanceValue: {
+        fontFamily: fontFamilies.bold,
+        fontSize: 20,
+        color: colors.text.primary,
+        marginTop: spacing.sm,
+    },
+
+    cardTitle: {
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 15,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
 
     infoRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        gap: spacing.md,
         paddingVertical: spacing.md,
-        gap: spacing.md,
     },
 
-    infoLabel: {
+    rowDivider: {
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+    },
+
+    rowIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: radius.md,
+        backgroundColor: colors.brand.soft,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    rowTextBox: {
+        flex: 1,
+    },
+
+    rowLabel: {
         fontFamily: fontFamilies.regular,
-        fontSize: 12,
+        fontSize: 11,
         color: colors.text.secondary,
-        flexShrink: 1,
     },
 
-    infoValue: {
+    rowValue: {
         fontFamily: fontFamilies.semiBold,
-        fontSize: 12,
+        fontSize: 14,
         color: colors.text.primary,
-        textAlign: 'right',
-        flexShrink: 1,
-    },
-
-    divider: {
-        height: 1,
-        backgroundColor: colors.border,
-    },
-
-    editCard: {
-        gap: spacing.md,
-    },
-
-    cancelButton: {
-        marginTop: spacing.sm,
-    },
-
-
-
-    logoutSection: {
-        marginTop: spacing.sm,
     },
 
     logoutButton: {
-        height: 54,
+        minHeight: 52,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFF0F0',
-        borderWidth: 1,
-        borderColor: '#F2CECE',
-        borderRadius: radius.lg,
+        marginTop: spacing.sm,
     },
 
     logoutText: {
@@ -437,7 +520,11 @@ const styles = StyleSheet.create({
         color: colors.status.error,
     },
 
-    disabledButton: {
+    pressed: {
+        opacity: 0.6,
+    },
+
+    disabled: {
         opacity: 0.5,
     },
 
@@ -450,20 +537,5 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.semiBold,
         fontSize: 18,
         color: colors.text.primary,
-    },
-
-    dialogText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        lineHeight: 21,
-        color: colors.text.secondary,
-    },
-
-    footer: {
-        textAlign: 'center',
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-        marginTop: spacing.xxl,
     },
 });

@@ -1,9 +1,10 @@
-
+// src/app/login.tsx
 import { useState } from 'react';
 
 import {
     KeyboardAvoidingView,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,19 +13,23 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { SymbolView } from 'expo-symbols';
 
 import AppButton from '@/components/common/AppButton';
 import AppInput from '@/components/common/AppInput';
 
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 import { colors } from '@/theme/colors';
-import { elevation, radius, spacing } from '@/theme/metrics';
+import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
 export default function LoginScreen() {
     const router = useRouter();
     const { signIn } = useAuth();
+    const { language, toggleLanguage, t } = useLanguage();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -39,11 +44,11 @@ export default function LoginScreen() {
         const cleanUsername = username.trim();
 
         setUsernameError(
-            !cleanUsername ? 'Please enter your username.' : ''
+            !cleanUsername ? t('usernameRequired') : ''
         );
 
         setPasswordError(
-            !password ? 'Please enter your password.' : ''
+            !password ? t('passwordRequired') : ''
         );
 
         setAuthError('');
@@ -68,7 +73,7 @@ export default function LoginScreen() {
             setAuthError(
                 error instanceof Error
                     ? error.message
-                    : 'Unable to sign in. Please try again.'
+                    : t('signInFailed')
             );
         } finally {
             setIsSubmitting(false);
@@ -77,6 +82,18 @@ export default function LoginScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            {/* Language switch */}
+            <Pressable
+                style={styles.languageButton}
+                onPress={toggleLanguage}
+                accessibilityRole="button"
+                accessibilityLabel="Change language"
+            >
+                <Text style={styles.languageText}>
+                    {language === 'en' ? 'English' : 'Français'}
+                </Text>
+            </Pressable>
+
             <KeyboardAvoidingView
                 style={styles.keyboardView}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -88,57 +105,55 @@ export default function LoginScreen() {
                 >
                     <View style={styles.content}>
 
-                        {/* Brand identity */}
+                        {/* Logo and app name */}
                         <View style={styles.brandSection}>
-                            <View style={styles.brandIcon}>
-                                <Text style={styles.brandIconText}>M</Text>
-                            </View>
+                            <Image
+                                source={require('@/assets/images/illico_cash.png')}
+                                style={styles.logo}
+                                contentFit="contain"
+                                accessibilityLabel="Merchant Portal logo"
+                            />
 
                             <Text style={styles.brandName}>
-                                MERCHANT PORTAL
+                                Merchant Portal
                             </Text>
                         </View>
 
-                        {/* Welcome heading */}
+                        {/* Heading */}
                         <View style={styles.headingSection}>
                             <Text style={styles.heading}>
-                                Welcome back
+                                {t('welcomeBack')}
                             </Text>
 
                             <Text style={styles.subtitle}>
-                                Sign in to manage your business and
-                                keep everything running smoothly.
+                                {t('signInSubtitle')}
                             </Text>
                         </View>
 
                         {/* Login form */}
                         <View style={styles.formCard}>
-                            <Text style={styles.formTitle}>
-                                Sign in to your account
-                            </Text>
-
                             <AppInput
-                                label="Username"
+                                label={t('username')}
                                 value={username}
                                 onChangeText={(value) => {
                                     setUsername(value);
                                     setUsernameError('');
                                     setAuthError('');
                                 }}
-                                placeholder="Enter your username"
+                                placeholder={t('usernamePlaceholder')}
                                 autoCapitalize="none"
                                 error={usernameError}
                             />
 
                             <AppInput
-                                label="Password"
+                                label={t('password')}
                                 value={password}
                                 onChangeText={(value) => {
                                     setPassword(value);
                                     setPasswordError('');
                                     setAuthError('');
                                 }}
-                                placeholder="Enter your password"
+                                placeholder={t('passwordPlaceholder')}
                                 secureTextEntry
                                 autoCapitalize="none"
                                 error={passwordError}
@@ -152,38 +167,30 @@ export default function LoginScreen() {
                                 </Text>
                             ) : null}
 
-                            <View style={styles.buttonContainer}>
-                                <AppButton
-                                    title="Sign In"
-                                    onPress={handleLogin}
-                                    loading={isSubmitting}
-                                    disabled={isSubmitting}
-                                />
-                            </View>
-
-                            <Text style={styles.footerText}>
-                                Secure merchant access
-                            </Text>
+                            <AppButton
+                                title={t('signIn')}
+                                onPress={handleLogin}
+                                loading={isSubmitting}
+                                disabled={isSubmitting}
+                            />
                         </View>
 
-                        {/* Development-only demo account information */}
-                        <View style={styles.demoCard}>
-                            <Text style={styles.demoTitle}>
-                                Development Demo Account
-                            </Text>
+                        {/* Caption */}
+                        <View style={styles.secureRow}>
+                            <SymbolView
+                                name={{
+                                    ios: 'lock',
+                                    android: 'lock',
+                                    web: 'lock',
+                                }}
+                                size={14}
+                                tintColor={colors.text.secondary}
+                            />
 
-                            <Text style={styles.demoText}>
-                                Email: merchant.demo@example.com
-                            </Text>
-
-                            <Text style={styles.demoText}>
-                                Password: Demo123!
+                            <Text style={styles.secureText}>
+                                {t('secureAccess')}
                             </Text>
                         </View>
-
-                        <Text style={styles.bottomText}>
-                            Merchant Portal V0.1
-                        </Text>
 
                     </View>
                 </ScrollView>
@@ -196,6 +203,18 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: colors.background,
+    },
+
+    languageButton: {
+        alignSelf: 'flex-end',
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+    },
+
+    languageText: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 13,
+        color: colors.text.primary,
     },
 
     keyboardView: {
@@ -219,37 +238,26 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xxxl,
     },
 
-    brandIcon: {
-        width: 64,
-        height: 64,
-        backgroundColor: colors.brand.primary,
-        borderRadius: radius.xl,
-        alignItems: 'center',
-        justifyContent: 'center',
+    logo: {
+        width: 72,
+        height: 72,
         marginBottom: spacing.md,
     },
 
-    brandIconText: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 34,
-        color: colors.brand.onPrimary,
-    },
-
     brandName: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 13,
-        letterSpacing: 2,
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 16,
         color: colors.text.primary,
     },
 
     headingSection: {
-        marginBottom: spacing.xxl,
         alignItems: 'center',
+        marginBottom: spacing.xl,
     },
 
     heading: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 28,
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 24,
         color: colors.text.primary,
         marginBottom: spacing.sm,
     },
@@ -257,10 +265,8 @@ const styles = StyleSheet.create({
     subtitle: {
         fontFamily: fontFamilies.regular,
         fontSize: 14,
-        lineHeight: 22,
         color: colors.text.secondary,
         textAlign: 'center',
-        maxWidth: 320,
     },
 
     formCard: {
@@ -269,18 +275,6 @@ const styles = StyleSheet.create({
         borderRadius: radius.xl,
         borderWidth: 1,
         borderColor: colors.border,
-        ...elevation.card,
-    },
-
-    formTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 18,
-        color: colors.text.primary,
-        marginBottom: spacing.xl,
-    },
-
-    buttonContainer: {
-        marginTop: spacing.md,
     },
 
     errorMessage: {
@@ -290,40 +284,17 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
 
-    footerText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 12,
-        color: colors.text.secondary,
-        textAlign: 'center',
-        marginTop: spacing.lg,
-    },
-
-    demoCard: {
+    secureRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
         marginTop: spacing.xl,
-        padding: spacing.lg,
-        backgroundColor: colors.brand.soft,
-        borderRadius: radius.lg,
     },
 
-    demoTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 12,
-        color: colors.text.primary,
-        marginBottom: spacing.sm,
-    },
-
-    demoText: {
+    secureText: {
         fontFamily: fontFamilies.regular,
         fontSize: 12,
-        color: colors.text.primary,
-        lineHeight: 20,
-    },
-
-    bottomText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
         color: colors.text.secondary,
-        textAlign: 'center',
-        marginTop: spacing.xxl,
     },
 });

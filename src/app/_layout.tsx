@@ -14,6 +14,8 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { PaperProvider } from 'react-native-paper';
 import { paperTheme } from '@/theme/paperTheme';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { DrawerProvider } from '@/context/DrawerContext';
 
 import { Montserrat_400Regular } from '@expo-google-fonts/montserrat/400Regular';
 import { Montserrat_500Medium } from '@expo-google-fonts/montserrat/500Medium';
@@ -93,9 +95,13 @@ export default function RootLayout() {
 
     return (
         <PaperProvider theme={paperTheme}>
-            <AuthProvider>
-                <AppNavigator />
-            </AuthProvider>
+            <LanguageProvider>
+                <AuthProvider>
+                    <DrawerProvider>
+                        <AppNavigator />
+                    </DrawerProvider>
+                </AuthProvider>
+            </LanguageProvider>
         </PaperProvider>
     );
 }

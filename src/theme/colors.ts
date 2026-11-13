@@ -9,7 +9,8 @@ export const colors = {
     },
 
     // Application backgrounds
-    background: '#F5F9FF',
+    background: '#F3F4F6',
+    appBar: '#5F676B',
     surface: '#FFFFFF',
     navigation: '#E9EDF3',
 

@@ -10,6 +10,13 @@ function clean(value: string | null | undefined): string {
     return (value ?? '').trim();
 }
 
+// The server sends money in cents (1085444 means 10,854.44).
+function toAmount(value: string | null | undefined): number {
+    const parsed = Number(value);
+
+    return Number.isFinite(parsed) ? parsed / 100 : 0;
+}
+
 // Converts the server's answer into the shape our screens use.
 export function mapMerchantProfile(
     response: MerchantProfileApiResponse
@@ -22,14 +29,19 @@ export function mapMerchantProfile(
         clean(response.merchantname) ||
         'Merchant';
 
+    const wallets = response.walletsAndLinkedAccounts;
+
     return {
         merchantId: clean(response.merchantid),
         merchantCode: clean(response.merchantcode),
+        merchantType: clean(response.merchanttype),
         fullName,
         businessName: clean(response.businessname),
         email: clean(response.emailaddress),
         mobileNumber: clean(response.mobilenumber),
         city: clean(response.city),
         country: clean(response.country),
+        usdBalance: toAmount(wallets?.walletUSDBalance),
+        cdfBalance: toAmount(wallets?.walletCDFBalance),
     };
 }

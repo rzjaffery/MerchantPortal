@@ -11,6 +11,12 @@ function toNumber(value: string | number | null | undefined): number {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
+// The server sends money in cents (1085444 means 10,854.44),
+// so divide by 100 to get the real amount.
+function toAmount(value: string | number | null | undefined): number {
+    return toNumber(value) / 100;
+}
+
 // Converts the server's answer into the shape the Dashboard screen uses.
 export function mapDashboardResponse(
     response: DashboardApiResponse
@@ -18,10 +24,10 @@ export function mapDashboardResponse(
     const graph = response.combineddashboardgraph;
 
     return {
-        successfulAmountCDF: toNumber(graph?.successfulAmountCDF),
-        successfulAmountUSD: toNumber(graph?.successfulAmountUSD),
-        failedAmountCDF: toNumber(graph?.failedAmountCDF),
-        failedAmountUSD: toNumber(graph?.failedAmountUSD),
+        successfulAmountCDF: toAmount(graph?.successfulAmountCDF),
+        successfulAmountUSD: toAmount(graph?.successfulAmountUSD),
+        failedAmountCDF: toAmount(graph?.failedAmountCDF),
+        failedAmountUSD: toAmount(graph?.failedAmountUSD),
         successfulSeries: toNumber(graph?.successfulSeries),
         failedSeries: toNumber(graph?.failedSeries),
     };

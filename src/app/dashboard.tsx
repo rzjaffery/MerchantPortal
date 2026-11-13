@@ -8,15 +8,21 @@ import {
     View,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { SymbolView } from 'expo-symbols';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
+import AppHeader from '@/components/common/AppHeader';
+import BranchChartCard from '@/components/dashboard/BranchChartCard';
 
 import { useAuth } from '@/context/AuthContext';
+import { useDrawer } from '@/context/DrawerContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { getDashboardSummary } from '@/services/dashboard/dashboardService';
+
+import type { TranslationKey } from '@/i18n/translations';
 
 import type {
     DashboardPeriod,
@@ -24,42 +30,43 @@ import type {
 } from '@/types/dashboard';
 
 import { colors } from '@/theme/colors';
-import { elevation, radius, spacing } from '@/theme/metrics';
+import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
-// The period chips. Add more here once their server values are known.
-const periods: { label: string; value: DashboardPeriod }[] = [
-    { label: 'Today', value: 'TODAY' },
-    { label: 'This year', value: 'THISYEAR' },
+// The period chips. A chip with value null is shown greyed out
+// until we know the value the server expects for it.
+const periods: {
+    labelKey: TranslationKey;
+    value: DashboardPeriod | null;
+}[] = [
+    { labelKey: 'today', value: 'TODAY' },
+    { labelKey: 'yesterday', value: null },
+    { labelKey: 'last7Days', value: null },
+    { labelKey: 'last30Days', value: null },
+    { labelKey: 'thisYear', value: 'THISYEAR' },
 ];
 
-// Features that will get their own screens later.
-const upcomingRows = ['Portal QR', 'Dynamic QR', 'Sales by branch'] as const;
-
-// Formats an amount with its currency code, e.g. "CDF 248,000".
-function formatAmount(currency: 'CDF' | 'USD', amount: number): string {
-    return `${currency} ${amount.toLocaleString()}`;
+// Formats money with two decimals, e.g. 10,854.44
+function formatAmount(amount: number): string {
+    return amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 }
 
 export default function DashboardScreen() {
     const router = useRouter();
     const { user, accessToken } = useAuth();
+    const { t } = useLanguage();
+    const { openDrawer } = useDrawer();
 
     const [period, setPeriod] = useState<DashboardPeriod>('TODAY');
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [hasError, setHasError] = useState(false);
+    const [serverMessage, setServerMessage] = useState('');
 
     const username = user?.username ?? '';
-    const displayName = user?.fullName ?? 'Merchant';
-
-    const initials = displayName
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
 
     const loadSummary = useCallback(async () => {
         if (!username || !accessToken) {
@@ -67,7 +74,8 @@ export default function DashboardScreen() {
         }
 
         setIsLoading(true);
-        setError(null);
+        setHasError(false);
+        setServerMessage('');
 
         try {
             const data = await getDashboardSummary(
@@ -78,10 +86,10 @@ export default function DashboardScreen() {
 
             setSummary(data);
         } catch (loadError) {
-            setError(
-                loadError instanceof Error
-                    ? loadError.message
-                    : 'Unable to load dashboard information.'
+            setHasError(true);
+
+            setServerMessage(
+                loadError instanceof Error ? loadError.message : ''
             );
         } finally {
             setIsLoading(false);
@@ -105,72 +113,52 @@ export default function DashboardScreen() {
 
     const failedPercent = totalSeries > 0 ? 100 - successPercent : 0;
 
-    const amountCards = summary
-        ? [
-            {
-                label: 'Successful CDF',
-                value: formatAmount('CDF', summary.successfulAmountCDF),
-            },
-            {
-                label: 'Successful USD',
-                value: formatAmount('USD', summary.successfulAmountUSD),
-            },
-            {
-                label: 'Failed CDF',
-                value: formatAmount('CDF', summary.failedAmountCDF),
-            },
-            {
-                label: 'Failed USD',
-                value: formatAmount('USD', summary.failedAmountUSD),
-            },
-        ]
-        : [];
+    const selectedPeriodLabel = t(
+        periods.find((item) => item.value === period)?.labelKey ?? 'today'
+    );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.screen}>
+            <AppHeader
+                title={t('home')}
+                leftIcon="menu"
+                onLeftPress={openDrawer}
+                onProfilePress={() => router.push('/profile')}
+            />
+
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
 
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.headerText}>
-                        <Text style={styles.greeting}>
-                            Welcome back,
-                        </Text>
-
-                        <Text style={styles.merchantName}>
-                            {displayName}
-                        </Text>
-                    </View>
-
-                    <Pressable
-                        style={styles.profileButton}
-                        onPress={() => router.push('/profile')}
-                        accessibilityRole="button"
-                        accessibilityLabel="Open merchant profile"
-                    >
-                        <Text style={styles.profileInitials}>
-                            {initials || 'M'}
-                        </Text>
-                    </Pressable>
-                </View>
-
                 {/* Period chips */}
-                <View style={styles.chipRow}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.chipRow}
+                >
                     {periods.map((item) => {
-                        const selected = item.value === period;
+                        const value = item.value;
+                        const selected = value !== null && value === period;
 
                         return (
                             <Pressable
-                                key={item.value}
-                                onPress={() => setPeriod(item.value)}
+                                key={item.labelKey}
+                                disabled={value === null}
+                                onPress={() => {
+                                    if (value !== null) {
+                                        setPeriod(value);
+                                    }
+                                }}
                                 accessibilityRole="button"
-                                accessibilityState={{ selected }}
+                                accessibilityState={{
+                                    selected,
+                                    disabled: value === null,
+                                }}
                                 style={[
                                     styles.chip,
                                     selected && styles.chipSelected,
+                                    value === null && styles.chipDisabled,
                                 ]}
                             >
                                 <Text
@@ -179,12 +167,12 @@ export default function DashboardScreen() {
                                         selected && styles.chipTextSelected,
                                     ]}
                                 >
-                                    {item.label}
+                                    {t(item.labelKey)}
                                 </Text>
                             </Pressable>
                         );
                     })}
-                </View>
+                </ScrollView>
 
                 {isLoading ? (
                     <View style={styles.stateContainer}>
@@ -193,29 +181,35 @@ export default function DashboardScreen() {
                             color={colors.brand.primary}
                         />
 
-                        <Text style={styles.stateText}>
-                            Loading your figures...
+                        <Text style={styles.mutedText}>
+                            {t('loadingFigures')}
                         </Text>
                     </View>
-                ) : error ? (
+                ) : hasError ? (
                     <View style={styles.stateContainer}>
                         <Text style={styles.errorText}>
-                            {error}
+                            {serverMessage || t('loadFailed')}
                         </Text>
 
                         <AppButton
-                            title="Try Again"
+                            title={t('tryAgain')}
                             variant="outline"
                             onPress={() => void loadSummary()}
                         />
                     </View>
-                ) : (
+                ) : summary ? (
                     <>
-                        {/* Success rate */}
-                        <AppCard style={styles.rateCard}>
-                            <Text style={styles.cardLabel}>
-                                Transactions
-                            </Text>
+                        {/* Transactions summary */}
+                        <AppCard style={styles.card}>
+                            <View style={styles.cardTitleRow}>
+                                <Text style={styles.cardTitle}>
+                                    {t('transactionsSummary')}
+                                </Text>
+
+                                <Text style={styles.cardMeta}>
+                                    {selectedPeriodLabel}
+                                </Text>
+                            </View>
 
                             <View style={styles.rateTrack}>
                                 {totalSeries > 0 ? (
@@ -238,115 +232,129 @@ export default function DashboardScreen() {
 
                             {totalSeries > 0 ? (
                                 <View style={styles.rateLegend}>
-                                    <Text style={styles.rateSuccessText}>
-                                        {successPercent}% successful
-                                    </Text>
+                                    <View style={styles.legendItem}>
+                                        <View
+                                            style={[
+                                                styles.dot,
+                                                styles.dotSuccess,
+                                            ]}
+                                        />
+                                        <Text style={styles.legendText}>
+                                            {successPercent}% {t('successful')}
+                                        </Text>
+                                    </View>
 
-                                    <Text style={styles.rateFailedText}>
-                                        {failedPercent}% failed
-                                    </Text>
+                                    <View style={styles.legendItem}>
+                                        <View
+                                            style={[
+                                                styles.dot,
+                                                styles.dotFailed,
+                                            ]}
+                                        />
+                                        <Text style={styles.legendText}>
+                                            {failedPercent}% {t('failed')}
+                                        </Text>
+                                    </View>
                                 </View>
                             ) : (
-                                <Text style={styles.emptyText}>
-                                    No transactions in this period.
+                                <Text style={styles.mutedText}>
+                                    {t('noTransactions')}
                                 </Text>
                             )}
                         </AppCard>
 
-                        {/* Amounts */}
-                        <View style={styles.amountGrid}>
-                            {amountCards.map((card) => (
-                                <AppCard
-                                    key={card.label}
-                                    style={styles.amountCard}
-                                >
-                                    <Text style={styles.cardLabel}>
-                                        {card.label}
-                                    </Text>
+                        {/* USD and CDF amounts */}
+                        <View style={styles.amountRow}>
+                            <AppCard style={styles.amountCard}>
+                                <Text style={styles.amountLabel}>
+                                    {t('usdTransactions')}
+                                </Text>
 
-                                    <Text style={styles.amountValue}>
-                                        {card.value}
+                                <Text style={styles.amountValue}>
+                                    <Text style={styles.amountCurrency}>
+                                        USD{' '}
                                     </Text>
-                                </AppCard>
-                            ))}
+                                    {formatAmount(summary.successfulAmountUSD)}
+                                </Text>
+                            </AppCard>
+
+                            <AppCard style={styles.amountCard}>
+                                <Text style={styles.amountLabel}>
+                                    {t('cdfTransactions')}
+                                </Text>
+
+                                <Text style={styles.amountValue}>
+                                    <Text style={styles.amountCurrency}>
+                                        CDF{' '}
+                                    </Text>
+                                    {formatAmount(summary.successfulAmountCDF)}
+                                </Text>
+                            </AppCard>
                         </View>
                     </>
-                )}
+                ) : null}
 
-                {/* Features that open their own screens later */}
-                {upcomingRows.map((title) => (
-                    <View key={title} style={styles.row}>
-                        <Text style={styles.rowTitle}>
-                            {title}
-                        </Text>
+                {/* Branch charts. No branch data is available yet,
+                    so both receive an empty list. */}
+                <Text style={styles.sectionTitle}>
+                    {t('salesVolume')}
+                </Text>
 
-                        <Text style={styles.rowTag}>
-                            Soon
-                        </Text>
+                <BranchChartCard data={[]} emptyText={t('noBranchData')} />
+
+                <Text style={styles.sectionTitle}>
+                    {t('transactionCount')}
+                </Text>
+
+                <BranchChartCard data={[]} emptyText={t('noBranchData')} />
+
+                {/* QR code (the real code is a later step) */}
+                <AppCard style={styles.qrCard}>
+                    <Text style={styles.cardTitle}>
+                        {t('myQrCode')}
+                    </Text>
+
+                    <Text style={styles.mutedText}>
+                        {t('qrCaption')}
+                    </Text>
+
+                    <View style={styles.qrBox}>
+                        <SymbolView
+                            name={{
+                                ios: 'qrcode',
+                                android: 'qr_code_2',
+                                web: 'qr_code_2',
+                            }}
+                            size={88}
+                            tintColor={colors.text.primary}
+                        />
                     </View>
-                ))}
+
+                    <Text style={styles.cardMeta}>
+                        {t('soon')}
+                    </Text>
+                </AppCard>
 
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screen: {
         flex: 1,
         backgroundColor: colors.background,
     },
 
     scrollContent: {
-        paddingHorizontal: spacing.xl,
-        paddingTop: spacing.lg,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
         paddingBottom: spacing.xxxl,
     },
 
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: spacing.xl,
-    },
-
-    headerText: {
-        flex: 1,
-    },
-
-    greeting: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 14,
-        color: colors.text.secondary,
-    },
-
-    merchantName: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 22,
-        color: colors.text.primary,
-        marginTop: spacing.xs,
-    },
-
-    profileButton: {
-        width: 48,
-        height: 48,
-        borderRadius: radius.full,
-        backgroundColor: colors.brand.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...elevation.card,
-    },
-
-    profileInitials: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 16,
-        color: colors.brand.onPrimary,
-    },
-
     chipRow: {
-        flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.xl,
+        paddingBottom: spacing.md,
     },
 
     chip: {
@@ -361,6 +369,10 @@ const styles = StyleSheet.create({
     chipSelected: {
         backgroundColor: colors.brand.primary,
         borderColor: colors.brand.primary,
+    },
+
+    chipDisabled: {
+        opacity: 0.45,
     },
 
     chipText: {
@@ -379,12 +391,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         gap: spacing.md,
-        marginBottom: spacing.xl,
+        marginBottom: spacing.md,
     },
 
-    stateText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
+    mutedText: {
+        fontFamily: fontFamilies.regular,
+        fontSize: 12,
         color: colors.text.secondary,
     },
 
@@ -395,19 +407,31 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
-    rateCard: {
+    card: {
         marginBottom: spacing.md,
     },
 
-    cardLabel: {
+    cardTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    cardTitle: {
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 14,
+        color: colors.text.primary,
+    },
+
+    cardMeta: {
         fontFamily: fontFamilies.medium,
-        fontSize: 12,
+        fontSize: 11,
         color: colors.text.secondary,
     },
 
     rateTrack: {
         flexDirection: 'row',
-        height: 10,
+        height: 8,
         borderRadius: radius.full,
         overflow: 'hidden',
         backgroundColor: colors.border,
@@ -428,65 +452,85 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
 
-    rateSuccessText: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 12,
-        color: colors.status.success,
-    },
-
-    rateFailedText: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 12,
-        color: colors.status.error,
-    },
-
-    emptyText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
-
-    amountGrid: {
+    legendItem: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+
+    legendText: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 11,
+        color: colors.text.primary,
+    },
+
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: radius.full,
+    },
+
+    dotSuccess: {
+        backgroundColor: colors.status.success,
+    },
+
+    dotFailed: {
+        backgroundColor: colors.status.error,
+    },
+
+    amountRow: {
+        flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.xl,
+        marginBottom: spacing.md,
     },
 
     amountCard: {
-        width: '48%',
+        flex: 1,
         padding: spacing.md,
+    },
+
+    amountLabel: {
+        fontFamily: fontFamilies.medium,
+        fontSize: 11,
+        color: colors.text.secondary,
     },
 
     amountValue: {
         fontFamily: fontFamilies.bold,
-        fontSize: 17,
+        fontSize: 16,
         color: colors.text.primary,
-        marginTop: spacing.sm,
+        textAlign: 'right',
+        marginTop: spacing.lg,
     },
 
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.lg,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.lg,
+    amountCurrency: {
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 10,
+        color: colors.text.secondary,
+    },
+
+    sectionTitle: {
+        fontFamily: fontFamilies.semiBold,
+        fontSize: 15,
+        color: colors.text.primary,
+        marginTop: spacing.sm,
         marginBottom: spacing.sm,
     },
 
-    rowTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 14,
-        color: colors.text.primary,
+    qrCard: {
+        alignItems: 'center',
+        paddingVertical: spacing.xl,
+        marginTop: spacing.sm,
+        gap: spacing.xs,
     },
 
-    rowTag: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 11,
-        color: colors.text.secondary,
+    qrBox: {
+        width: 128,
+        height: 128,
+        borderRadius: radius.lg,
+        backgroundColor: colors.brand.soft,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: spacing.md,
     },
 });
