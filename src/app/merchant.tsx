@@ -124,7 +124,7 @@ export default function MerchantScreen() {
             <AppHeader
                 title={t('merchant')}
                 leftIcon="back"
-                onLeftPress={() => router.back()}
+                onLeftPress={router.back}
             />
 
             <ScrollView

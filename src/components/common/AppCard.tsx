@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.xl,
+        borderColor: colors.background,
+        borderRadius: radius.md,
         padding: spacing.lg,
         ...elevation.card,
     },
