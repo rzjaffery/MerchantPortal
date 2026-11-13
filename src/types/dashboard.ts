@@ -2,7 +2,12 @@
 import type { ApiResponse } from '@/services/api/apiClient';
 
 // The time periods the server accepts (confirmed so far).
-export type DashboardPeriod = 'TODAY' | 'THISYEAR';
+export type DashboardPeriod =
+    | 'TODAY'
+    | 'YESTERDAY'
+    | 'LAST7DAYS'
+    | 'LAST30DAYS'
+    | 'THISYEAR';
 
 // The figures shown on the Dashboard.
 export interface DashboardSummary {

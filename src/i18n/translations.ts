@@ -57,6 +57,8 @@ const en = {
     last30Days: 'Last 30 Days',
     usdTransactions: 'USD Transactions',
     cdfTransactions: 'CDF Transactions',
+    loginTime: 'Login Time',
+    updateProfilePicture: 'Update Profile Picture',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -115,6 +117,8 @@ const fr: Record<TranslationKey, string> = {
     last30Days: '30 derniers jours',
     usdTransactions: 'Transactions USD',
     cdfTransactions: 'Transactions CDF',
+    loginTime: 'Heure de connexion',
+    updateProfilePicture: 'Modifier la photo de profil',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

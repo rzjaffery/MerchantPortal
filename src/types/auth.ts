@@ -22,4 +22,6 @@ export interface LoginCredentials {
 export interface AuthSession {
     accessToken: string;
     user: MerchantUser;
+    loginTime?: string;
+    picture?: string;
 }

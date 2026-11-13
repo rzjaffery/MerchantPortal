@@ -29,6 +29,8 @@ import type {
 interface AuthContextValue {
     user: MerchantUser | null;
     accessToken: string | null;
+    picture: string | null;
+    loginTime: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     signIn: (credentials: LoginCredentials) => Promise<void>;
@@ -163,6 +165,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         () => ({
             user: session?.user ?? null,
             accessToken: session?.accessToken ?? null,
+            picture: session?.picture ?? null,
+            loginTime: session?.loginTime ?? null,
             isAuthenticated: session !== null,
             isLoading,
             signIn,

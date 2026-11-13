@@ -23,6 +23,7 @@ const demoDashboardSummary: DashboardSummary = {
 export async function getDashboardSummary(
     username: string,
     token: string,
+    userId: string,
     period: DashboardPeriod
 ): Promise<DashboardSummary> {
     if (USE_DEMO_API) {
@@ -30,10 +31,13 @@ export async function getDashboardSummary(
     }
 
     const response = await postToMerchantApi<DashboardApiResponse>(
-        'getdashboardinformation',
+        'getbulkpaymentdashboardinformation',
         {
             username,
             token,
+            userid: userId,
+            // Spelled exactly as the web portal sends it.
+            searchtext: 'BullkPaymentToMobile',
             encryptkey: API_ENCRYPT_KEY,
             combineddashboardgraph: { timePeriod: period },
         }

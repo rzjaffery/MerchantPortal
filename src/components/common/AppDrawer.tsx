@@ -53,7 +53,7 @@ const menuItems = [
     },
     {
         label: 'Merchant',
-        route: '/profile',
+        route: '/merchant',
         icon: { ios: 'storefront', android: 'storefront', web: 'storefront' },
     },
     {

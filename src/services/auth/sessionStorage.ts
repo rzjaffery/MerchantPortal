@@ -42,6 +42,9 @@ function isValidSession(value: unknown): value is AuthSession {
 export async function saveSession(
     session: AuthSession
 ): Promise<void> {
+
+    const {picture: _picture, ...sessionToSave} = session;
+
     await SecureStore.setItemAsync(
         SESSION_STORAGE_KEY,
         JSON.stringify(session)

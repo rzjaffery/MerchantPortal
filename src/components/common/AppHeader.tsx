@@ -3,11 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
+import ProfileAvatar from '@/components/common/ProfileAvatar';
 
 import { useLanguage } from '@/context/LanguageContext';
 
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/metrics';
+import { spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
 // Icon names for each platform.
@@ -76,15 +77,7 @@ export default function AppHeader({
                         accessibilityRole="button"
                         accessibilityLabel="Open profile"
                     >
-                        <SymbolView
-                            name={{
-                                ios: 'person',
-                                android: 'person',
-                                web: 'person',
-                            }}
-                            size={18}
-                            tintColor={colors.text.inverse}
-                        />
+                        <ProfileAvatar size={34} />
                     </Pressable>
                 ) : null}
             </View>
@@ -131,12 +124,6 @@ const styles = StyleSheet.create({
     },
 
     profileButton: {
-        width: 34,
-        height: 34,
-        borderRadius: radius.full,
-        backgroundColor: 'rgba(255, 255, 255, 0.25)',
-        alignItems: 'center',
-        justifyContent: 'center',
         marginRight: spacing.sm,
     },
 });

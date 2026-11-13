@@ -10,7 +10,7 @@ import {
 
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { SymbolView } from 'expo-symbols';
+import QRCode from 'react-native-qrcode-svg';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
@@ -40,9 +40,9 @@ const periods: {
     value: DashboardPeriod | null;
 }[] = [
     { labelKey: 'today', value: 'TODAY' },
-    { labelKey: 'yesterday', value: null },
-    { labelKey: 'last7Days', value: null },
-    { labelKey: 'last30Days', value: null },
+    { labelKey: 'yesterday', value: 'YESTERDAY' },
+    { labelKey: 'last7Days', value: 'LAST7DAYS' },
+    { labelKey: 'last30Days', value: 'LAST30DAYS' },
     { labelKey: 'thisYear', value: 'THISYEAR' },
 ];
 
@@ -67,9 +67,10 @@ export default function DashboardScreen() {
     const [serverMessage, setServerMessage] = useState('');
 
     const username = user?.username ?? '';
+    const userId = user?.id ?? '';
 
     const loadSummary = useCallback(async () => {
-        if (!username || !accessToken) {
+        if (!username || !accessToken || !userId) {
             return;
         }
 
@@ -81,6 +82,7 @@ export default function DashboardScreen() {
             const data = await getDashboardSummary(
                 username,
                 accessToken,
+                userId,
                 period
             );
 
@@ -94,7 +96,7 @@ export default function DashboardScreen() {
         } finally {
             setIsLoading(false);
         }
-    }, [username, accessToken, period]);
+    }, [username, accessToken, userId, period]);
 
     // Runs on first load and again whenever the period changes.
     useEffect(() => {
@@ -318,21 +320,12 @@ export default function DashboardScreen() {
                         {t('qrCaption')}
                     </Text>
 
-                    <View style={styles.qrBox}>
-                        <SymbolView
-                            name={{
-                                ios: 'qrcode',
-                                android: 'qr_code_2',
-                                web: 'qr_code_2',
-                            }}
-                            size={88}
-                            tintColor={colors.text.primary}
-                        />
-                    </View>
+                    {userId ? (
+                        <View style={styles.qrBox}>
+                            <QRCode value={userId} size={160}/>
+                        </View>
+                    ): null}
 
-                    <Text style={styles.cardMeta}>
-                        {t('soon')}
-                    </Text>
                 </AppCard>
 
             </ScrollView>
@@ -525,12 +518,11 @@ const styles = StyleSheet.create({
     },
 
     qrBox: {
-        width: 128,
-        height: 128,
+        padding: spacing.md,
         borderRadius: radius.lg,
-        backgroundColor: colors.brand.soft,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: spacing.md,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginTop: spacing.md,
     },
 });

@@ -74,7 +74,7 @@ function AppNavigator() {
                     redirectTo="/login"
                 >
                     <Stack.Screen name="dashboard" />
-                    <Stack.Screen name="profile" />
+                    <Stack.Screen name="merchant" />
                 </Stack.Protected>
             </Stack>
         </>

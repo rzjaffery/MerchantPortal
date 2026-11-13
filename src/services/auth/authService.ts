@@ -21,10 +21,29 @@ interface LoginApiResponse extends ApiResponse {
     lastname: string | null;
     merchantname: string | null;
     emailaddress: string | null;
+    customerpicture: string | null;
 }
 
 function clean(value: string | null | undefined): string {
     return (value ?? '').trim();
+}
+
+// Turns the server's picture data into an address an image can display.
+function toPictureUri(value: string | null | undefined): string | undefined {
+    const data = clean(value);
+
+    if (!data) {
+        return undefined;
+    }
+
+    if (data.startsWith('data:')) {
+        return data;
+    }
+
+    // PNG data starts with "iVBOR". Otherwise treat it as JPEG.
+    const type = data.startsWith('iVBOR') ? 'png' : 'jpeg';
+
+    return `data:image/${type};base64,${data}`;
 }
 
 // Signs in against the real server and builds the app's session.
@@ -60,6 +79,8 @@ export async function signInWithApi(
 
     return {
         accessToken: token,
+        loginTime: new Date().toISOString(),
+        picture: toPictureUri(response.customerpicture),
         user: {
             id:
                 clean(response.userid) ||
