@@ -25,6 +25,7 @@ import type {
     LoginCredentials,
     MerchantUser,
 } from '@/types/auth';
+import { setSessionExpiredHandler } from '@/services/api/apiClient';
 
 interface AuthContextValue {
     user: MerchantUser | null;
@@ -33,6 +34,7 @@ interface AuthContextValue {
     loginTime: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    sessionExpired: boolean;
     signIn: (credentials: LoginCredentials) => Promise<void>;
     signOut: () => Promise<void>;
     updateUser: (changes: Partial<MerchantUser>) => Promise<void>;
@@ -47,6 +49,21 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
     const [session, setSession] = useState<AuthSession | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // True when the server ended the session, so Login can explain why.
+    const [sessionExpired, setSessionExpired] = useState(false);
+
+    // When any server call reports an expired session, sign out on the phone.
+    // The protected routes then send the user back to Login automatically.
+    useEffect(() => {
+        setSessionExpiredHandler(() => {
+            void clearSession();
+            setSession(null);
+            setSessionExpired(true);
+        });
+
+        return () => setSessionExpiredHandler(null);
+    }, []);
 
     // Restore the previous session when the application starts.
     useEffect(() => {
@@ -114,6 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await saveSession(newSession);
 
             setSession(newSession);
+            setSessionExpired(false);
         },
         []
     );
@@ -169,11 +187,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             loginTime: session?.loginTime ?? null,
             isAuthenticated: session !== null,
             isLoading,
+            sessionExpired,
             signIn,
             signOut,
             updateUser,
         }),
-        [session, isLoading, signIn, signOut, updateUser]
+        [session, isLoading, sessionExpired, signIn, signOut, updateUser]
     );
 
     return (

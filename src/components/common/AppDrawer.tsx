@@ -35,119 +35,119 @@ const menuItems = [
         route: '/dashboard',
         icon: { ios: 'house', android: 'home', web: 'home' },
     },
-    {
-        label: 'Wallets And Accounts',
-        icon: {
-            ios: 'creditcard',
-            android: 'account_balance_wallet',
-            web: 'account_balance_wallet',
-        },
-    },
-    {
-        label: 'Wallet To Account Push Pull',
-        icon: {
-            ios: 'arrow.left.arrow.right',
-            android: 'swap_horiz',
-            web: 'swap_horiz',
-        },
-    },
+    // {
+    //     label: 'Wallets And Accounts',
+    //     icon: {
+    //         ios: 'creditcard',
+    //         android: 'account_balance_wallet',
+    //         web: 'account_balance_wallet',
+    //     },
+    // },
+    // {
+    //     label: 'Wallet To Account Push Pull',
+    //     icon: {
+    //         ios: 'arrow.left.arrow.right',
+    //         android: 'swap_horiz',
+    //         web: 'swap_horiz',
+    //     },
+    // },
     {
         label: 'Merchant',
         route: '/merchant',
         icon: { ios: 'storefront', android: 'storefront', web: 'storefront' },
     },
-    {
-        label: 'Wallet To Wallet Push Pull',
-        icon: {
-            ios: 'arrow.left.arrow.right',
-            android: 'swap_horiz',
-            web: 'swap_horiz',
-        },
-    },
-    {
-        label: 'Live Transactions',
-        icon: {
-            ios: 'list.bullet.rectangle',
-            android: 'receipt_long',
-            web: 'receipt_long',
-        },
-    },
-    {
-        label: 'illicocash Reporting',
-        icon: { ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' },
-    },
-    {
-        label: 'Bulk Payment',
-        icon: { ios: 'banknote', android: 'payments', web: 'payments' },
-    },
-    {
-        label: 'Bulk Payment Checker',
-        icon: {
-            ios: 'checkmark.circle',
-            android: 'check_circle',
-            web: 'check_circle',
-        },
-    },
-    {
-        label: 'Bulk Payment Approver',
-        icon: {
-            ios: 'checkmark.shield',
-            android: 'verified_user',
-            web: 'verified_user',
-        },
-    },
-    {
-        label: 'Portal QR',
-        icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
-    },
-    {
-        label: 'Register Employee Excel',
-        icon: {
-            ios: 'person.badge.plus',
-            android: 'group_add',
-            web: 'group_add',
-        },
-    },
-    {
-        label: 'Terminal ID Configuration',
-        icon: {
-            ios: 'desktopcomputer',
-            android: 'point_of_sale',
-            web: 'point_of_sale',
-        },
-    },
-    {
-        label: 'Dynamic QR',
-        icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
-    },
-    {
-        label: 'Dynamic Payment Via Mobile',
-        icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
-    },
-    {
-        label: 'Payment via Mobile Number',
-        icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
-    },
-    {
-        label: 'Merchant Payment Log',
-        icon: { ios: 'list.bullet', android: 'list_alt', web: 'list_alt' },
-    },
-    {
-        label: 'Wallet Sweeping Batch Summary',
-        icon: {
-            ios: 'arrow.triangle.2.circlepath',
-            android: 'sync_alt',
-            web: 'sync_alt',
-        },
-    },
-    {
-        label: 'Per Transaction Wallet Sweep',
-        icon: {
-            ios: 'arrow.triangle.2.circlepath',
-            android: 'sync_alt',
-            web: 'sync_alt',
-        },
-    },
+    // {
+    //     label: 'Wallet To Wallet Push Pull',
+    //     icon: {
+    //         ios: 'arrow.left.arrow.right',
+    //         android: 'swap_horiz',
+    //         web: 'swap_horiz',
+    //     },
+    // },
+    // {
+    //     label: 'Live Transactions',
+    //     icon: {
+    //         ios: 'list.bullet.rectangle',
+    //         android: 'receipt_long',
+    //         web: 'receipt_long',
+    //     },
+    // },
+    // {
+    //     label: 'illicocash Reporting',
+    //     icon: { ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' },
+    // },
+    // {
+    //     label: 'Bulk Payment',
+    //     icon: { ios: 'banknote', android: 'payments', web: 'payments' },
+    // },
+    // {
+    //     label: 'Bulk Payment Checker',
+    //     icon: {
+    //         ios: 'checkmark.circle',
+    //         android: 'check_circle',
+    //         web: 'check_circle',
+    //     },
+    // },
+    // {
+    //     label: 'Bulk Payment Approver',
+    //     icon: {
+    //         ios: 'checkmark.shield',
+    //         android: 'verified_user',
+    //         web: 'verified_user',
+    //     },
+    // },
+    // {
+    //     label: 'Portal QR',
+    //     icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
+    // },
+    // {
+    //     label: 'Register Employee Excel',
+    //     icon: {
+    //         ios: 'person.badge.plus',
+    //         android: 'group_add',
+    //         web: 'group_add',
+    //     },
+    // },
+    // {
+    //     label: 'Terminal ID Configuration',
+    //     icon: {
+    //         ios: 'desktopcomputer',
+    //         android: 'point_of_sale',
+    //         web: 'point_of_sale',
+    //     },
+    // },
+    // {
+    //     label: 'Dynamic QR',
+    //     icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
+    // },
+    // {
+    //     label: 'Dynamic Payment Via Mobile',
+    //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
+    // },
+    // {
+    //     label: 'Payment via Mobile Number',
+    //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
+    // },
+    // {
+    //     label: 'Merchant Payment Log',
+    //     icon: { ios: 'list.bullet', android: 'list_alt', web: 'list_alt' },
+    // },
+    // {
+    //     label: 'Wallet Sweeping Batch Summary',
+    //     icon: {
+    //         ios: 'arrow.triangle.2.circlepath',
+    //         android: 'sync_alt',
+    //         web: 'sync_alt',
+    //     },
+    // },
+    // {
+    //     label: 'Per Transaction Wallet Sweep',
+    //     icon: {
+    //         ios: 'arrow.triangle.2.circlepath',
+    //         android: 'sync_alt',
+    //         web: 'sync_alt',
+    //     },
+    // },
 ] as const;
 
 interface AppDrawerProps {
@@ -222,28 +222,28 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                         </Text>
                     </View>
 
-                    {/* Search */}
-                    <View style={styles.searchBox}>
-                        <SymbolView
-                            name={{
-                                ios: 'magnifyingglass',
-                                android: 'search',
-                                web: 'search',
-                            }}
-                            size={18}
-                            tintColor={colors.text.secondary}
-                        />
+                    {/*/!* Search *!/*/}
+                    {/*<View style={styles.searchBox}>*/}
+                    {/*    <SymbolView*/}
+                    {/*        name={{*/}
+                    {/*            ios: 'magnifyingglass',*/}
+                    {/*            android: 'search',*/}
+                    {/*            web: 'search',*/}
+                    {/*        }}*/}
+                    {/*        size={18}*/}
+                    {/*        tintColor={colors.text.secondary}*/}
+                    {/*    />*/}
 
-                        <TextInput
-                            style={styles.searchInput}
-                            value={query}
-                            onChangeText={setQuery}
-                            placeholder={t('search')}
-                            placeholderTextColor={colors.text.secondary}
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                        />
-                    </View>
+                    {/*    <TextInput*/}
+                    {/*        style={styles.searchInput}*/}
+                    {/*        value={query}*/}
+                    {/*        onChangeText={setQuery}*/}
+                    {/*        placeholder={t('search')}*/}
+                    {/*        placeholderTextColor={colors.text.secondary}*/}
+                    {/*        autoCorrect={false}*/}
+                    {/*        autoCapitalize="none"*/}
+                    {/*    />*/}
+                    {/*</View>*/}
 
                     {/* Menu */}
                     <ScrollView
@@ -316,6 +316,11 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                             {t('merchantId')}: {user.merchantId}
                         </Text>
                     ) : null}
+                    {user?.username ?(
+                        <Text style={styles.footerText}>
+                            {t('username')}: {user.username}
+                        </Text>
+                    ): null}
                 </Animated.View>
 
                 {/* Tapping the dark area closes the drawer */}

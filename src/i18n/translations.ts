@@ -59,6 +59,8 @@ const en = {
     cdfTransactions: 'CDF Transactions',
     loginTime: 'Login Time',
     updateProfilePicture: 'Update Profile Picture',
+    sessionExpired: 'Your session has ended. Please sign in again.',
+    version: 'Version',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -119,6 +121,8 @@ const fr: Record<TranslationKey, string> = {
     cdfTransactions: 'Transactions CDF',
     loginTime: 'Heure de connexion',
     updateProfilePicture: 'Modifier la photo de profil',
+    sessionExpired: 'Votre session a expiré. Veuillez vous reconnecter.',
+    version: 'Version',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

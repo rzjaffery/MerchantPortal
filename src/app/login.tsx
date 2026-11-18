@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import {
     KeyboardAvoidingView,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -28,7 +27,7 @@ import { fontFamilies } from '@/theme/typography';
 
 export default function LoginScreen() {
     const router = useRouter();
-    const { signIn } = useAuth();
+    const { signIn, sessionExpired } = useAuth();
     const { language, toggleLanguage, t } = useLanguage();
 
     const [username, setUsername] = useState('');
@@ -96,7 +95,7 @@ export default function LoginScreen() {
 
             <KeyboardAvoidingView
                 style={styles.keyboardView}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior="padding"
             >
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -164,6 +163,10 @@ export default function LoginScreen() {
                             {authError ? (
                                 <Text style={styles.errorMessage}>
                                     {authError}
+                                </Text>
+                            ) : sessionExpired ? (
+                                <Text style={styles.errorMessage}>
+                                    {t('sessionExpired')}
                                 </Text>
                             ) : null}
 

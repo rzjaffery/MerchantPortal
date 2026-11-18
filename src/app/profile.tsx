@@ -24,6 +24,7 @@ import { getMerchantProfile } from '@/services/profile/profileService';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
+import Constants from 'expo-constants';
 
 // Icon names for each platform.
 const icons = {
@@ -32,6 +33,9 @@ const icons = {
     lock: { ios: 'lock', android: 'lock', web: 'lock' },
     image: { ios: 'photo', android: 'image', web: 'image' },
 } as const;
+
+// The app version from app.json, e.g. "1.0.0".
+const appVersion = Constants.expoConfig?.version ?? '';
 
 // Adds a leading zero: 7 becomes "07".
 function pad(value: number): string {
@@ -220,6 +224,8 @@ export default function ProfileScreen() {
                     ))}
                 </AppCard>
 
+                <View style={styles.spacer}/>
+
                 {/* Log out */}
                 <Pressable
                     onPress={() => setLogoutDialogVisible(true)}
@@ -239,6 +245,14 @@ export default function ProfileScreen() {
                         </Text>
                     )}
                 </Pressable>
+
+
+                {/* App version */}
+                {appVersion ? (
+                    <Text style={styles.versionText}>
+                        {t('version')} {appVersion}
+                    </Text>
+                ) : null}
 
             </ScrollView>
 
@@ -295,9 +309,16 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
 
+    spacer: {
+        flex: 1,
+        // The smallest gap between the cards and Log Out.
+        minHeight: spacing.xxl,
+    },
+
     scrollContent: {
+        flexGrow: 1,
         padding: spacing.lg,
-        paddingBottom: spacing.xxxl,
+        paddingBottom: spacing.xl,
     },
 
     card: {
@@ -396,5 +417,12 @@ const styles = StyleSheet.create({
         fontSize: 13,
         lineHeight: 20,
         color: colors.text.secondary,
+    },
+    versionText: {
+        fontFamily: fontFamilies.regular,
+        fontSize: 11,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: spacing.md,
     },
 });
