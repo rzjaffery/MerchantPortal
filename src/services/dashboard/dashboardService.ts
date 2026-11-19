@@ -31,7 +31,7 @@ export async function getDashboardSummary(
     }
 
     const response = await postToMerchantApi<DashboardApiResponse>(
-        'getbulkpaymentdashboardinformation',
+        'getdashboardinformation',
         {
             username,
             token,

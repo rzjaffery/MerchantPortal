@@ -272,12 +272,20 @@ export default function DashboardScreen() {
                                     {t('usdTransactions')}
                                 </Text>
 
-                                <Text style={styles.amountValue}>
+                                <View style={styles.amountValueRow}>
                                     <Text style={styles.amountCurrency}>
-                                        USD{' '}
+                                        USD
                                     </Text>
-                                    {formatAmount(summary.successfulAmountUSD)}
-                                </Text>
+
+                                    <Text
+                                        style={styles.amountValue}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.6}
+                                    >
+                                        {formatAmount(summary.successfulAmountUSD)}
+                                    </Text>
+                                </View>
                             </AppCard>
 
                             <AppCard style={styles.amountCard}>
@@ -285,12 +293,20 @@ export default function DashboardScreen() {
                                     {t('cdfTransactions')}
                                 </Text>
 
-                                <Text style={styles.amountValue}>
+                                <View style={styles.amountValueRow}>
                                     <Text style={styles.amountCurrency}>
-                                        CDF{' '}
+                                        CDF
                                     </Text>
-                                    {formatAmount(summary.successfulAmountCDF)}
-                                </Text>
+
+                                    <Text
+                                        style={styles.amountValue}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.6}
+                                    >
+                                        {formatAmount(summary.successfulAmountCDF)}
+                                    </Text>
+                                </View>
                             </AppCard>
                         </View>
                     </>
@@ -486,14 +502,24 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.medium,
         fontSize: 11,
         color: colors.text.secondary,
+        textAlign: 'right',
+    },
+
+    amountValueRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        justifyContent: 'flex-end',
+        gap: spacing.xs,
+        marginTop: spacing.lg,
     },
 
     amountValue: {
+        // Lets the number shrink instead of pushing out of the card.
+        flexShrink: 1,
         fontFamily: fontFamilies.bold,
         fontSize: 16,
         color: colors.text.primary,
         textAlign: 'right',
-        marginTop: spacing.lg,
     },
 
     amountCurrency: {

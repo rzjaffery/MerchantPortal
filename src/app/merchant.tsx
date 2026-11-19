@@ -169,7 +169,12 @@ export default function MerchantScreen() {
                                     {t('usdBalance')}
                                 </Text>
 
-                                <Text style={styles.balanceValue}>
+                                <Text
+                                    style={styles.balanceValue}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.6}
+                                >
                                     {formatAmount(profile.usdBalance)}
                                 </Text>
                             </AppCard>
@@ -179,7 +184,12 @@ export default function MerchantScreen() {
                                     {t('cdfBalance')}
                                 </Text>
 
-                                <Text style={styles.balanceValue}>
+                                <Text
+                                    style={styles.balanceValue}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.6}
+                                >
                                     {formatAmount(profile.cdfBalance)}
                                 </Text>
                             </AppCard>
