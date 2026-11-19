@@ -61,6 +61,11 @@ const en = {
     updateProfilePicture: 'Update Profile Picture',
     sessionExpired: 'Your session has ended. Please sign in again.',
     version: 'Version',
+    appearance: 'Appearance',
+    themeSystem: 'System',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystemHint: 'Follows your phone setting.',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -123,6 +128,11 @@ const fr: Record<TranslationKey, string> = {
     updateProfilePicture: 'Modifier la photo de profil',
     sessionExpired: 'Votre session a expiré. Veuillez vous reconnecter.',
     version: 'Version',
+    appearance: 'Apparence',
+    themeSystem: 'Système',
+    themeLight: 'Clair',
+    themeDark: 'Sombre',
+    themeSystemHint: 'Suit le réglage de votre téléphone.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

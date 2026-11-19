@@ -21,11 +21,15 @@ import AppInput from '@/components/common/AppInput';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
 export default function LoginScreen() {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const router = useRouter();
     const { signIn, sessionExpired } = useAuth();
     const { language, toggleLanguage, t } = useLanguage();
@@ -202,102 +206,104 @@ export default function LoginScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        safeArea: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
 
-    languageButton: {
-        alignSelf: 'flex-end',
-        paddingHorizontal: spacing.xl,
-        paddingVertical: spacing.md,
-    },
+        languageButton: {
+            alignSelf: 'flex-end',
+            paddingHorizontal: spacing.xl,
+            paddingVertical: spacing.md,
+        },
 
-    languageText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        color: colors.text.primary,
-    },
+        languageText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.text.primary,
+        },
 
-    keyboardView: {
-        flex: 1,
-    },
+        keyboardView: {
+            flex: 1,
+        },
 
-    scrollContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        padding: spacing.xl,
-    },
+        scrollContent: {
+            flexGrow: 1,
+            justifyContent: 'center',
+            padding: spacing.xl,
+        },
 
-    content: {
-        width: '100%',
-        maxWidth: 460,
-        alignSelf: 'center',
-    },
+        content: {
+            width: '100%',
+            maxWidth: 460,
+            alignSelf: 'center',
+        },
 
-    brandSection: {
-        alignItems: 'center',
-        marginBottom: spacing.xxxl,
-    },
+        brandSection: {
+            alignItems: 'center',
+            marginBottom: spacing.xxxl,
+        },
 
-    logo: {
-        width: 72,
-        height: 72,
-        marginBottom: spacing.md,
-    },
+        logo: {
+            width: 72,
+            height: 72,
+            marginBottom: spacing.md,
+        },
 
-    brandName: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 16,
-        color: colors.text.primary,
-    },
+        brandName: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 16,
+            color: colors.text.primary,
+        },
 
-    headingSection: {
-        alignItems: 'center',
-        marginBottom: spacing.xl,
-    },
+        headingSection: {
+            alignItems: 'center',
+            marginBottom: spacing.xl,
+        },
 
-    heading: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 24,
-        color: colors.text.primary,
-        marginBottom: spacing.sm,
-    },
+        heading: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 24,
+            color: colors.text.primary,
+            marginBottom: spacing.sm,
+        },
 
-    subtitle: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 14,
-        color: colors.text.secondary,
-        textAlign: 'center',
-    },
+        subtitle: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 14,
+            color: colors.text.secondary,
+            textAlign: 'center',
+        },
 
-    formCard: {
-        backgroundColor: colors.surface,
-        padding: spacing.xl,
-        borderRadius: radius.xl,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
+        formCard: {
+            backgroundColor: colors.surface,
+            padding: spacing.xl,
+            borderRadius: radius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
 
-    errorMessage: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        color: colors.status.error,
-        marginBottom: spacing.md,
-    },
+        errorMessage: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 13,
+            color: colors.status.error,
+            marginBottom: spacing.md,
+        },
 
-    secureRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.xs,
-        marginTop: spacing.xl,
-    },
+        secureRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.xs,
+            marginTop: spacing.xl,
+        },
 
-    secureText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
-});
+        secureText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 12,
+            color: colors.text.secondary,
+        },
+    });

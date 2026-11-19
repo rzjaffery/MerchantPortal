@@ -22,7 +22,8 @@ import { getMerchantProfile } from '@/services/profile/profileService';
 
 import type { MerchantProfile } from '@/types/profile';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -43,6 +44,9 @@ function formatAmount(amount: number): string {
 }
 
 export default function MerchantScreen() {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const router = useRouter();
     const { user } = useAuth();
     const { t } = useLanguage();
@@ -233,100 +237,102 @@ export default function MerchantScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        screen: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
 
-    scrollContent: {
-        padding: spacing.lg,
-        paddingBottom: spacing.xxxl,
-    },
+        scrollContent: {
+            padding: spacing.lg,
+            paddingBottom: spacing.xxxl,
+        },
 
-    avatarBox: {
-        alignItems: 'center',
-        marginVertical: spacing.lg,
-    },
+        avatarBox: {
+            alignItems: 'center',
+            marginVertical: spacing.lg,
+        },
 
-    stateContainer: {
-        minHeight: 160,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: spacing.md,
-    },
+        stateContainer: {
+            minHeight: 160,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: spacing.md,
+        },
 
-    mutedText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        color: colors.text.secondary,
-    },
+        mutedText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 13,
+            color: colors.text.secondary,
+        },
 
-    errorText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        color: colors.status.error,
-        textAlign: 'center',
-    },
+        errorText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.status.error,
+            textAlign: 'center',
+        },
 
-    balanceGrid: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.md,
-    },
+        balanceGrid: {
+            flexDirection: 'row',
+            gap: spacing.sm,
+            marginBottom: spacing.md,
+        },
 
-    balanceCard: {
-        flex: 1,
-        padding: spacing.md,
-    },
+        balanceCard: {
+            flex: 1,
+            padding: spacing.md,
+        },
 
-    balanceLabel: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 11,
-        color: colors.text.secondary,
-    },
+        balanceLabel: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 11,
+            color: colors.text.secondary,
+        },
 
-    balanceValue: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 20,
-        color: colors.text.primary,
-        marginTop: spacing.sm,
-    },
+        balanceValue: {
+            fontFamily: fontFamilies.bold,
+            fontSize: 20,
+            color: colors.text.primary,
+            marginTop: spacing.sm,
+        },
 
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        paddingVertical: spacing.md,
-    },
+        infoRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingVertical: spacing.md,
+        },
 
-    rowDivider: {
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-    },
+        rowDivider: {
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+        },
 
-    rowIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: radius.md,
-        backgroundColor: colors.brand.soft,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+        rowIcon: {
+            width: 36,
+            height: 36,
+            borderRadius: radius.md,
+            backgroundColor: colors.brand.soft,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
 
-    rowTextBox: {
-        flex: 1,
-    },
+        rowTextBox: {
+            flex: 1,
+        },
 
-    rowLabel: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-    },
+        rowLabel: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+        },
 
-    rowValue: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 14,
-        color: colors.text.primary,
-    },
-});
+        rowValue: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 14,
+            color: colors.text.primary,
+        },
+    });

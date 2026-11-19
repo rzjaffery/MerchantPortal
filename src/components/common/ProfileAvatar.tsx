@@ -5,7 +5,8 @@ import { SymbolView } from 'expo-symbols';
 
 import { useAuth } from '@/context/AuthContext';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 interface ProfileAvatarProps {
     // Total width and height, including the ring.
@@ -14,6 +15,9 @@ interface ProfileAvatarProps {
 
 // The user's picture in a framed circle, or a person icon when there is none.
 export default function ProfileAvatar({ size }: ProfileAvatarProps) {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const { picture } = useAuth();
 
     // The ring and the white gap grow with the avatar, so a small
@@ -64,15 +68,17 @@ export default function ProfileAvatar({ size }: ProfileAvatarProps) {
     );
 }
 
-const styles = StyleSheet.create({
-    frame: {
-        borderColor: colors.brand.primary,
-        backgroundColor: colors.surface,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        frame: {
+            borderColor: colors.brand.primary,
+            backgroundColor: colors.surface,
+        },
 
-    placeholder: {
-        backgroundColor: colors.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
+        placeholder: {
+            backgroundColor: colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+    });

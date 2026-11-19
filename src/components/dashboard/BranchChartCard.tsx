@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import AppCard from '@/components/common/AppCard';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -27,6 +28,8 @@ export default function BranchChartCard({
                                             data,
                                             emptyText,
                                         }: BranchChartCardProps) {
+    const styles = useThemedStyles(createStyles);
+
     const [currency, setCurrency] = useState<'USD' | 'CDF'>('USD');
 
     const values = data.map((point) =>
@@ -104,79 +107,81 @@ export default function BranchChartCard({
     );
 }
 
-const styles = StyleSheet.create({
-    card: {
-        marginBottom: spacing.md,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        card: {
+            marginBottom: spacing.md,
+        },
 
-    segmented: {
-        flexDirection: 'row',
-        alignSelf: 'flex-start',
-        backgroundColor: colors.background,
-        borderRadius: radius.md,
-        padding: spacing.xs,
-        marginBottom: spacing.md,
-    },
+        segmented: {
+            flexDirection: 'row',
+            alignSelf: 'flex-start',
+            backgroundColor: colors.background,
+            borderRadius: radius.md,
+            padding: spacing.xs,
+            marginBottom: spacing.md,
+        },
 
-    segment: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: radius.md,
-    },
+        segment: {
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm,
+            borderRadius: radius.md,
+        },
 
-    segmentSelected: {
-        backgroundColor: colors.brand.primary,
-    },
+        segmentSelected: {
+            backgroundColor: colors.brand.primary,
+        },
 
-    segmentText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
+        segmentText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 12,
+            color: colors.text.secondary,
+        },
 
-    segmentTextSelected: {
-        fontFamily: fontFamilies.semiBold,
-        color: colors.brand.onPrimary,
-    },
+        segmentTextSelected: {
+            fontFamily: fontFamilies.semiBold,
+            color: colors.brand.onPrimary,
+        },
 
-    emptyBox: {
-        height: CHART_HEIGHT,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+        emptyBox: {
+            height: CHART_HEIGHT,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
 
-    emptyText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
+        emptyText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 12,
+            color: colors.text.secondary,
+        },
 
-    bars: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'space-around',
-    },
+        bars: {
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            justifyContent: 'space-around',
+        },
 
-    barColumn: {
-        flex: 1,
-        alignItems: 'center',
-    },
+        barColumn: {
+            flex: 1,
+            alignItems: 'center',
+        },
 
-    barTrack: {
-        height: CHART_HEIGHT,
-        justifyContent: 'flex-end',
-    },
+        barTrack: {
+            height: CHART_HEIGHT,
+            justifyContent: 'flex-end',
+        },
 
-    bar: {
-        width: 22,
-        borderRadius: radius.sm,
-        backgroundColor: colors.brand.primary,
-    },
+        bar: {
+            width: 22,
+            borderRadius: radius.sm,
+            backgroundColor: colors.brand.primary,
+        },
 
-    barLabel: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 10,
-        color: colors.text.secondary,
-        marginTop: spacing.xs,
-    },
-});
+        barLabel: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 10,
+            color: colors.text.secondary,
+            marginTop: spacing.xs,
+        },
+    });

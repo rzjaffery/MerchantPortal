@@ -11,7 +11,8 @@ import {
 import { HelperText, TextInput } from 'react-native-paper';
 import { SymbolView } from 'expo-symbols';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { dimensions, radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -40,6 +41,9 @@ export default function AppInput({
                                      returnKeyType = 'next',
                                      onSubmitEditing,
                                  }: AppInputProps) {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const [passwordVisible, setPasswordVisible] = useState(false);
 
     const shouldHideText = secureTextEntry && !passwordVisible;
@@ -112,31 +116,33 @@ export default function AppInput({
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        marginBottom: spacing.lg,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        container: {
+            width: '100%',
+            marginBottom: spacing.lg,
+        },
 
-    input: {
-        height: dimensions.inputHeight,
-        backgroundColor: colors.surface,
-        fontFamily: fontFamilies.regular,
-        fontSize: 14,
-    },
+        input: {
+            height: dimensions.inputHeight,
+            backgroundColor: colors.surface,
+            fontFamily: fontFamilies.regular,
+            fontSize: 14,
+        },
 
-    label: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        color: colors.text.primary,
-        marginBottom: spacing.sm,
-    },
+        label: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.text.primary,
+            marginBottom: spacing.sm,
+        },
 
-    outline: {
-        borderRadius: radius.lg,
-    },
+        outline: {
+            borderRadius: radius.lg,
+        },
 
-    errorText: {
-        fontFamily: fontFamilies.regular,
-    },
-});
+        errorText: {
+            fontFamily: fontFamilies.regular,
+        },
+    });

@@ -21,10 +21,23 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getMerchantProfile } from '@/services/profile/profileService';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import {
+    useAppTheme,
+    useThemedStyles,
+    type ThemePreference,
+} from '@/context/ThemeContext';
+import type { TranslationKey } from '@/i18n/translations';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 import Constants from 'expo-constants';
+
+// The three appearance choices, in the order they are shown.
+const themeOptions: { value: ThemePreference; labelKey: TranslationKey }[] = [
+    { value: 'system', labelKey: 'themeSystem' },
+    { value: 'light', labelKey: 'themeLight' },
+    { value: 'dark', labelKey: 'themeDark' },
+];
 
 // Icon names for each platform.
 const icons = {
@@ -57,6 +70,9 @@ function formatLoginTime(isoTime: string): string {
 }
 
 export default function ProfileScreen() {
+    const { colors, preference, setPreference } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const router = useRouter();
     const { user, loginTime, signOut } = useAuth();
     const { t } = useLanguage();
@@ -131,7 +147,7 @@ export default function ProfileScreen() {
 
     // Actions whose screens are built in later steps.
     const upcomingActions = [
-        { key: 'picture', icon: icons.image, title: t('updateProfilePicture') },
+        // { key: 'picture', icon: icons.image, title: t('updateProfilePicture') },
         { key: 'updatePin', icon: icons.lock, title: t('updatePin') },
         { key: 'resetPin', icon: icons.lock, title: t('resetPin') },
     ];
@@ -224,6 +240,48 @@ export default function ProfileScreen() {
                     ))}
                 </AppCard>
 
+                {/* Appearance: System / Light / Dark */}
+                <AppCard style={styles.card}>
+                    <Text style={styles.sectionTitle}>
+                        {t('appearance')}
+                    </Text>
+
+                    <View style={styles.segmented}>
+                        {themeOptions.map((option) => {
+                            const selected = option.value === preference;
+
+                            return (
+                                <Pressable
+                                    key={option.value}
+                                    onPress={() => setPreference(option.value)}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ selected }}
+                                    style={[
+                                        styles.segment,
+                                        selected && styles.segmentSelected,
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.segmentText,
+                                            selected &&
+                                            styles.segmentTextSelected,
+                                        ]}
+                                    >
+                                        {t(option.labelKey)}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+
+                    {preference === 'system' ? (
+                        <Text style={styles.hintText}>
+                            {t('themeSystemHint')}
+                        </Text>
+                    ) : null}
+                </AppCard>
+
                 <View style={styles.spacer}/>
 
                 {/* Log out */}
@@ -303,126 +361,171 @@ export default function ProfileScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        screen: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
 
-    spacer: {
-        flex: 1,
-        // The smallest gap between the cards and Log Out.
-        minHeight: spacing.xxl,
-    },
+        sectionTitle: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 15,
+            color: colors.text.primary,
+            marginBottom: spacing.md,
+        },
 
-    scrollContent: {
-        flexGrow: 1,
-        padding: spacing.lg,
-        paddingBottom: spacing.xl,
-    },
+        segmented: {
+            flexDirection: 'row',
+            backgroundColor: colors.background,
+            borderRadius: radius.md,
+            padding: spacing.xs,
+        },
 
-    card: {
-        marginBottom: spacing.md,
-    },
+        segment: {
+            flex: 1,
+            alignItems: 'center',
+            paddingVertical: spacing.sm,
+            borderRadius: radius.md,
+        },
 
-    headerCard: {
-        alignItems: 'center',
-        paddingVertical: spacing.xl,
-    },
+        segmentSelected: {
+            backgroundColor: colors.brand.primary,
+        },
 
-    usernameLabel: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-        marginTop: spacing.md,
-    },
+        segmentText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.text.secondary,
+        },
 
-    username: {
-        fontFamily: fontFamilies.bold,
-        fontSize: 20,
-        color: colors.text.primary,
-    },
+        segmentTextSelected: {
+            fontFamily: fontFamilies.semiBold,
+            color: colors.brand.onPrimary,
+        },
 
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        paddingVertical: spacing.md,
-    },
+        hintText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+            marginTop: spacing.sm,
+        },
 
-    rowDivider: {
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-    },
+        spacer: {
+            flex: 1,
+            // The smallest gap between the cards and Log Out.
+            minHeight: spacing.xxl,
+        },
 
-    rowIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: radius.md,
-        backgroundColor: colors.brand.soft,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+        scrollContent: {
+            flexGrow: 1,
+            padding: spacing.lg,
+            paddingBottom: spacing.xl,
+        },
 
-    rowTextBox: {
-        flex: 1,
-    },
+        card: {
+            marginBottom: spacing.md,
+        },
 
-    rowLabel: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-    },
+        headerCard: {
+            alignItems: 'center',
+            paddingVertical: spacing.xl,
+        },
 
-    rowValue: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 14,
-        color: colors.text.primary,
-    },
+        usernameLabel: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+            marginTop: spacing.md,
+        },
 
-    logoutButton: {
-        minHeight: 52,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: spacing.sm,
-    },
+        username: {
+            fontFamily: fontFamilies.bold,
+            fontSize: 20,
+            color: colors.text.primary,
+        },
 
-    logoutText: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 15,
-        color: colors.status.error,
-    },
+        row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingVertical: spacing.md,
+        },
 
-    pressed: {
-        opacity: 0.6,
-    },
+        rowDivider: {
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+        },
 
-    disabled: {
-        opacity: 0.5,
-    },
+        rowIcon: {
+            width: 36,
+            height: 36,
+            borderRadius: radius.md,
+            backgroundColor: colors.brand.soft,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
 
-    dialog: {
-        backgroundColor: colors.surface,
-        borderRadius: radius.xl,
-    },
+        rowTextBox: {
+            flex: 1,
+        },
 
-    dialogTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 18,
-        color: colors.text.primary,
-    },
+        rowLabel: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+        },
 
-    dialogText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        lineHeight: 20,
-        color: colors.text.secondary,
-    },
-    versionText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-        textAlign: 'center',
-        marginTop: spacing.md,
-    },
-});
+        rowValue: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 14,
+            color: colors.text.primary,
+        },
+
+        logoutButton: {
+            minHeight: 52,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: spacing.sm,
+        },
+
+        logoutText: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 15,
+            color: colors.status.error,
+        },
+
+        pressed: {
+            opacity: 0.6,
+        },
+
+        disabled: {
+            opacity: 0.5,
+        },
+
+        dialog: {
+            backgroundColor: colors.surface,
+            borderRadius: radius.xl,
+        },
+
+        dialogTitle: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 18,
+            color: colors.text.primary,
+        },
+
+        dialogText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 13,
+            lineHeight: 20,
+            color: colors.text.secondary,
+        },
+        versionText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+            textAlign: 'center',
+            marginTop: spacing.md,
+        },
+    });

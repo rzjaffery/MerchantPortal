@@ -2,7 +2,8 @@
 import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { dimensions, radius } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -30,6 +31,9 @@ export default function AppButton({
                                       disabled = false,
                                       loading = false,
                                   }: AppButtonProps) {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     return (
         <Button
             mode={paperModes[variant]}
@@ -54,22 +58,24 @@ export default function AppButton({
     );
 }
 
-const styles = StyleSheet.create({
-    button: {
-        width: '100%',
-        borderRadius: radius.lg,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        button: {
+            width: '100%',
+            borderRadius: radius.lg,
+        },
 
-    outline: {
-        backgroundColor: colors.surface,
-    },
+        outline: {
+            backgroundColor: colors.surface,
+        },
 
-    content: {
-        height: dimensions.buttonHeight,
-    },
+        content: {
+            height: dimensions.buttonHeight,
+        },
 
-    label: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 15,
-    },
-});
+        label: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 15,
+        },
+    });

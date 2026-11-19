@@ -7,7 +7,8 @@ import ProfileAvatar from '@/components/common/ProfileAvatar';
 
 import { useLanguage } from '@/context/LanguageContext';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -31,6 +32,9 @@ export default function AppHeader({
                                       onLeftPress,
                                       onProfilePress,
                                   }: AppHeaderProps) {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     // Space taken by the phone's status bar (clock, battery).
     const insets = useSafeAreaInsets();
     const { language, toggleLanguage } = useLanguage();
@@ -85,45 +89,47 @@ export default function AppHeader({
     );
 }
 
-const styles = StyleSheet.create({
-    bar: {
-        backgroundColor: colors.appBar,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        bar: {
+            backgroundColor: colors.appBar,
+        },
 
-    row: {
-        height: 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.sm,
-        gap: spacing.xs,
-    },
+        row: {
+            height: 56,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: spacing.sm,
+            gap: spacing.xs,
+        },
 
-    iconButton: {
-        width: 44,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+        iconButton: {
+            width: 44,
+            height: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
 
-    title: {
-        flex: 1,
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 18,
-        color: colors.text.inverse,
-    },
+        title: {
+            flex: 1,
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 18,
+            color: colors.text.inverse,
+        },
 
-    languageButton: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.sm,
-    },
+        languageButton: {
+            paddingHorizontal: spacing.sm,
+            paddingVertical: spacing.sm,
+        },
 
-    languageText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 12,
-        color: colors.text.inverse,
-    },
+        languageText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 12,
+            color: colors.text.inverse,
+        },
 
-    profileButton: {
-        marginRight: spacing.sm,
-    },
-});
+        profileButton: {
+            marginRight: spacing.sm,
+        },
+    });

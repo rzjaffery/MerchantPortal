@@ -29,7 +29,8 @@ import type {
     DashboardSummary,
 } from '@/types/dashboard';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -55,6 +56,9 @@ function formatAmount(amount: number): string {
 }
 
 export default function DashboardScreen() {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const router = useRouter();
     const { user, accessToken } = useAuth();
     const { t } = useLanguage();
@@ -349,206 +353,210 @@ export default function DashboardScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        screen: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
 
-    scrollContent: {
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.xxxl,
-    },
+        scrollContent: {
+            paddingHorizontal: spacing.lg,
+            paddingTop: spacing.md,
+            paddingBottom: spacing.xxxl,
+        },
 
-    chipRow: {
-        gap: spacing.sm,
-        paddingBottom: spacing.md,
-    },
+        chipRow: {
+            gap: spacing.sm,
+            paddingBottom: spacing.md,
+        },
 
-    chip: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surface,
-    },
+        chip: {
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm,
+            borderRadius: radius.full,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+        },
 
-    chipSelected: {
-        backgroundColor: colors.brand.primary,
-        borderColor: colors.brand.primary,
-    },
+        chipSelected: {
+            backgroundColor: colors.brand.primary,
+            borderColor: colors.brand.primary,
+        },
 
-    chipDisabled: {
-        opacity: 0.45,
-    },
+        chipDisabled: {
+            opacity: 0.45,
+        },
 
-    chipText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
+        chipText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 12,
+            color: colors.text.secondary,
+        },
 
-    chipTextSelected: {
-        fontFamily: fontFamilies.semiBold,
-        color: colors.brand.onPrimary,
-    },
+        chipTextSelected: {
+            fontFamily: fontFamilies.semiBold,
+            color: colors.brand.onPrimary,
+        },
 
-    stateContainer: {
-        minHeight: 180,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: spacing.md,
-        marginBottom: spacing.md,
-    },
+        stateContainer: {
+            minHeight: 180,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: spacing.md,
+            marginBottom: spacing.md,
+        },
 
-    mutedText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
+        mutedText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 12,
+            color: colors.text.secondary,
+        },
 
-    errorText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        color: colors.status.error,
-        textAlign: 'center',
-    },
+        errorText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.status.error,
+            textAlign: 'center',
+        },
 
-    card: {
-        marginBottom: spacing.md,
-    },
+        card: {
+            marginBottom: spacing.md,
+        },
 
-    cardTitleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
+        cardTitleRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
 
-    cardTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 14,
-        color: colors.text.primary,
-    },
+        cardTitle: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 14,
+            color: colors.text.primary,
+        },
 
-    cardMeta: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 11,
-        color: colors.text.secondary,
-    },
+        cardMeta: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 11,
+            color: colors.text.secondary,
+        },
 
-    rateTrack: {
-        flexDirection: 'row',
-        height: 8,
-        borderRadius: radius.full,
-        overflow: 'hidden',
-        backgroundColor: colors.border,
-        marginTop: spacing.md,
-        marginBottom: spacing.sm,
-    },
+        rateTrack: {
+            flexDirection: 'row',
+            height: 8,
+            borderRadius: radius.full,
+            overflow: 'hidden',
+            backgroundColor: colors.border,
+            marginTop: spacing.md,
+            marginBottom: spacing.sm,
+        },
 
-    rateSuccess: {
-        backgroundColor: colors.status.success,
-    },
+        rateSuccess: {
+            backgroundColor: colors.status.success,
+        },
 
-    rateFailed: {
-        backgroundColor: colors.status.error,
-    },
+        rateFailed: {
+            backgroundColor: colors.status.error,
+        },
 
-    rateLegend: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+        rateLegend: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+        },
 
-    legendItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-    },
+        legendItem: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+        },
 
-    legendText: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 11,
-        color: colors.text.primary,
-    },
+        legendText: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 11,
+            color: colors.text.primary,
+        },
 
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: radius.full,
-    },
+        dot: {
+            width: 8,
+            height: 8,
+            borderRadius: radius.full,
+        },
 
-    dotSuccess: {
-        backgroundColor: colors.status.success,
-    },
+        dotSuccess: {
+            backgroundColor: colors.status.success,
+        },
 
-    dotFailed: {
-        backgroundColor: colors.status.error,
-    },
+        dotFailed: {
+            backgroundColor: colors.status.error,
+        },
 
-    amountRow: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.md,
-    },
+        amountRow: {
+            flexDirection: 'row',
+            gap: spacing.sm,
+            marginBottom: spacing.md,
+        },
 
-    amountCard: {
-        flex: 1,
-        padding: spacing.md,
-    },
+        amountCard: {
+            flex: 1,
+            padding: spacing.md,
+        },
 
-    amountLabel: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 11,
-        color: colors.text.secondary,
-        textAlign: 'right',
-    },
+        amountLabel: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 11,
+            color: colors.text.secondary,
+            textAlign: 'right',
+        },
 
-    amountValueRow: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        justifyContent: 'flex-end',
-        gap: spacing.xs,
-        marginTop: spacing.lg,
-    },
+        amountValueRow: {
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            justifyContent: 'flex-end',
+            gap: spacing.xs,
+            marginTop: spacing.lg,
+        },
 
-    amountValue: {
-        // Lets the number shrink instead of pushing out of the card.
-        flexShrink: 1,
-        fontFamily: fontFamilies.bold,
-        fontSize: 16,
-        color: colors.text.primary,
-        textAlign: 'right',
-    },
+        amountValue: {
+            // Lets the number shrink instead of pushing out of the card.
+            flexShrink: 1,
+            fontFamily: fontFamilies.bold,
+            fontSize: 16,
+            color: colors.text.primary,
+            textAlign: 'right',
+        },
 
-    amountCurrency: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 10,
-        color: colors.text.secondary,
-    },
+        amountCurrency: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 10,
+            color: colors.text.secondary,
+        },
 
-    sectionTitle: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 15,
-        color: colors.text.primary,
-        marginTop: spacing.sm,
-        marginBottom: spacing.sm,
-    },
+        sectionTitle: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 15,
+            color: colors.text.primary,
+            marginTop: spacing.sm,
+            marginBottom: spacing.sm,
+        },
 
-    qrCard: {
-        alignItems: 'center',
-        paddingVertical: spacing.xl,
-        marginTop: spacing.sm,
-        gap: spacing.xs,
-    },
+        qrCard: {
+            alignItems: 'center',
+            paddingVertical: spacing.xl,
+            marginTop: spacing.sm,
+            gap: spacing.xs,
+        },
 
-    qrBox: {
-        padding: spacing.md,
-        borderRadius: radius.lg,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginTop: spacing.md,
-    },
-});
+        qrBox: {
+            padding: spacing.md,
+            borderRadius: radius.lg,
+            // Always white, even in dark mode: scanners need a light
+            // background around a QR code.
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1,
+            borderColor: colors.border,
+            marginTop: spacing.md,
+        },
+    });

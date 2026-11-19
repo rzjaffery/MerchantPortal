@@ -21,7 +21,8 @@ import { SymbolView } from 'expo-symbols';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-import { colors } from '@/theme/colors';
+import type { AppColors } from '@/theme/colors';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
@@ -156,6 +157,9 @@ interface AppDrawerProps {
 }
 
 export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
+    const { colors } = useAppTheme();
+    const styles = useThemedStyles(createStyles);
+
     const router = useRouter();
     const pathname = usePathname();
     const insets = useSafeAreaInsets();
@@ -277,9 +281,13 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                                         name={item.icon}
                                         size={20}
                                         tintColor={
-                                            route === null
-                                                ? colors.text.secondary
-                                                : colors.text.primary
+                                            selected
+                                                // Dark text on the yellow row,
+                                                // in both light and dark mode.
+                                                ? colors.brand.onPrimary
+                                                : route === null
+                                                    ? colors.text.secondary
+                                                    : colors.text.primary
                                         }
                                     />
 
@@ -289,6 +297,8 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                                             styles.menuLabel,
                                             route === null &&
                                             styles.menuLabelMuted,
+                                            selected &&
+                                            styles.menuLabelSelected,
                                         ]}
                                     >
                                         {item.label}
@@ -335,110 +345,116 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
     );
 }
 
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        flexDirection: 'row',
-        backgroundColor: 'rgba(23, 26, 33, 0.45)',
-    },
+// Styles are built from the current colours, so they follow light or dark mode.
+const createStyles = (colors: AppColors) =>
+    StyleSheet.create({
+        overlay: {
+            flex: 1,
+            flexDirection: 'row',
+            backgroundColor: 'rgba(23, 26, 33, 0.45)',
+        },
 
-    panel: {
-        width: PANEL_WIDTH,
-        backgroundColor: colors.surface,
-        paddingHorizontal: spacing.md,
-    },
+        panel: {
+            width: PANEL_WIDTH,
+            backgroundColor: colors.surface,
+            paddingHorizontal: spacing.md,
+        },
 
-    backdrop: {
-        flex: 1,
-    },
+        backdrop: {
+            flex: 1,
+        },
 
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        paddingHorizontal: spacing.sm,
-        marginBottom: spacing.lg,
-    },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingHorizontal: spacing.sm,
+            marginBottom: spacing.lg,
+        },
 
-    logo: {
-        width: 44,
-        height: 44,
-    },
+        logo: {
+            width: 44,
+            height: 44,
+        },
 
-    appName: {
-        fontFamily: fontFamilies.semiBold,
-        fontSize: 16,
-        color: colors.text.primary,
-    },
+        appName: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 16,
+            color: colors.text.primary,
+        },
 
-    searchBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        height: 44,
-        paddingHorizontal: spacing.md,
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.background,
-        marginBottom: spacing.md,
-    },
+        searchBox: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+            height: 44,
+            paddingHorizontal: spacing.md,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.background,
+            marginBottom: spacing.md,
+        },
 
-    searchInput: {
-        flex: 1,
-        fontFamily: fontFamilies.regular,
-        fontSize: 14,
-        color: colors.text.primary,
-        paddingVertical: 0,
-    },
+        searchInput: {
+            flex: 1,
+            fontFamily: fontFamilies.regular,
+            fontSize: 14,
+            color: colors.text.primary,
+            paddingVertical: 0,
+        },
 
-    menu: {
-        flex: 1,
-    },
+        menu: {
+            flex: 1,
+        },
 
-    menuRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        minHeight: 48,
-        paddingHorizontal: spacing.md,
-        borderRadius: radius.md,
-    },
+        menuRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            minHeight: 48,
+            paddingHorizontal: spacing.md,
+            borderRadius: radius.md,
+        },
 
-    menuRowSelected: {
-        backgroundColor: colors.brand.primary,
-    },
+        menuRowSelected: {
+            backgroundColor: colors.brand.primary,
+        },
 
-    menuLabel: {
-        flex: 1,
-        fontFamily: fontFamilies.medium,
-        fontSize: 13,
-        color: colors.text.primary,
-    },
+        menuLabel: {
+            flex: 1,
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.text.primary,
+        },
 
-    menuLabelMuted: {
-        color: colors.text.secondary,
-    },
+        menuLabelSelected: {
+            color: colors.brand.onPrimary,
+        },
 
-    soonTag: {
-        fontFamily: fontFamilies.medium,
-        fontSize: 10,
-        color: colors.text.secondary,
-    },
+        menuLabelMuted: {
+            color: colors.text.secondary,
+        },
 
-    noResults: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 13,
-        color: colors.text.secondary,
-        textAlign: 'center',
-        marginTop: spacing.xl,
-    },
+        soonTag: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 10,
+            color: colors.text.secondary,
+        },
 
-    footerText: {
-        fontFamily: fontFamilies.regular,
-        fontSize: 11,
-        color: colors.text.secondary,
-        paddingHorizontal: spacing.sm,
-        paddingTop: spacing.md,
-    },
-});
+        noResults: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 13,
+            color: colors.text.secondary,
+            textAlign: 'center',
+            marginTop: spacing.xl,
+        },
+
+        footerText: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+            paddingHorizontal: spacing.sm,
+            paddingTop: spacing.md,
+        },
+    });
