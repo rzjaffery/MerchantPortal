@@ -117,11 +117,11 @@ const menuItems = [
     //         web: 'point_of_sale',
     //     },
     // },
-        {
-            label: 'Dynamic QR',
-            route: '/dynamic-qr',
-            icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
-        },
+    {
+        label: 'Dynamic QR',
+        route: '/dynamic-qr',
+        icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
+    },
     // {
     //     label: 'Dynamic Payment Via Mobile',
     //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
@@ -130,10 +130,11 @@ const menuItems = [
     //     label: 'Payment via Mobile Number',
     //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
     // },
-    // {
-    //     label: 'Merchant Payment Log',
-    //     icon: { ios: 'list.bullet', android: 'list_alt', web: 'list_alt' },
-    // },
+    {
+        label: 'Merchant Payment Log',
+        route: '/qr-payment-log',
+        icon: { ios: 'list.bullet', android: 'list_alt', web: 'list_alt' },
+    },
     // {
     //     label: 'Wallet Sweeping Batch Summary',
     //     icon: {

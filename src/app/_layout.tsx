@@ -94,6 +94,7 @@ function AppNavigator() {
                     <Stack.Screen name="profile" />
                     <Stack.Screen name="merchant" />
                     <Stack.Screen name="dynamic-qr" />
+                    <Stack.Screen name="qr-payment-log" />
                 </Stack.Protected>
             </Stack>
         </>
