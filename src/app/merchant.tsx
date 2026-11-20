@@ -290,6 +290,7 @@ const createStyles = (colors: AppColors) =>
             fontFamily: fontFamilies.medium,
             fontSize: 11,
             color: colors.text.secondary,
+            textAlign: 'right'
         },
 
         balanceValue: {
@@ -297,6 +298,7 @@ const createStyles = (colors: AppColors) =>
             fontSize: 20,
             color: colors.text.primary,
             marginTop: spacing.sm,
+            textAlign: 'right',
         },
 
         infoRow: {
