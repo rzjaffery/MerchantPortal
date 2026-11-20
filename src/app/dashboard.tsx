@@ -37,6 +37,7 @@ import type { AppColors } from '@/theme/colors';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
+import CurrencySummary from '@/components/dashboard/CurrencySummary';
 
 // The period chips. A chip with value null is shown greyed out
 // until we know the value the server expects for it.
@@ -115,18 +116,6 @@ export default function DashboardScreen() {
     useEffect(() => {
         void loadSummary();
     }, [loadSummary]);
-
-    // Share of successful and failed transactions, as percentages.
-    const totalSeries = summary
-        ? summary.successfulSeries + summary.failedSeries
-        : 0;
-
-    const successPercent =
-        summary && totalSeries > 0
-            ? Math.round((summary.successfulSeries / totalSeries) * 100)
-            : 0;
-
-    const failedPercent = totalSeries > 0 ? 100 - successPercent : 0;
 
     const selectedPeriodLabel = t(
         periods.find((item) => item.value === period)?.labelKey ?? 'today'
@@ -214,7 +203,6 @@ export default function DashboardScreen() {
                     </View>
                 ) : summary ? (
                     <>
-                        {/* Transactions summary */}
                         <AppCard style={styles.card}>
                             <View style={styles.cardTitleRow}>
                                 <Text style={styles.cardTitle}>
@@ -226,56 +214,12 @@ export default function DashboardScreen() {
                                 </Text>
                             </View>
 
-                            <View style={styles.rateTrack}>
-                                {totalSeries > 0 ? (
-                                    <>
-                                        <View
-                                            style={[
-                                                styles.rateSuccess,
-                                                { flex: successPercent },
-                                            ]}
-                                        />
-                                        <View
-                                            style={[
-                                                styles.rateFailed,
-                                                { flex: failedPercent },
-                                            ]}
-                                        />
-                                    </>
-                                ) : null}
-                            </View>
+                            {/* One large donut, with a USD / CDF switch and swipe */}
+                            <CurrencySummary summary={summary} />
 
-                            {totalSeries > 0 ? (
-                                <View style={styles.rateLegend}>
-                                    <View style={styles.legendItem}>
-                                        <View
-                                            style={[
-                                                styles.dot,
-                                                styles.dotSuccess,
-                                            ]}
-                                        />
-                                        <Text style={styles.legendText}>
-                                            {successPercent}% {t('successful')}
-                                        </Text>
-                                    </View>
-
-                                    <View style={styles.legendItem}>
-                                        <View
-                                            style={[
-                                                styles.dot,
-                                                styles.dotFailed,
-                                            ]}
-                                        />
-                                        <Text style={styles.legendText}>
-                                            {failedPercent}% {t('failed')}
-                                        </Text>
-                                    </View>
-                                </View>
-                            ) : (
-                                <Text style={styles.mutedText}>
-                                    {t('noTransactions')}
-                                </Text>
-                            )}
+                            <Text style={styles.chartNote}>
+                                {t('donutNote')}
+                            </Text>
                         </AppCard>
 
                         {/* USD and CDF amounts */}
@@ -452,6 +396,19 @@ const createStyles = (colors: AppColors) =>
 
         card: {
             marginBottom: spacing.md,
+        },
+
+        donutRow: {
+            flexDirection: 'row',
+            gap: spacing.sm,
+            marginTop: spacing.md,
+        },
+
+        chartNote: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 10,
+            color: colors.text.secondary,
+            marginTop: spacing.sm,
         },
 
         cardTitleRow: {

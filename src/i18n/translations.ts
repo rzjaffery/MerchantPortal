@@ -67,6 +67,8 @@ const en = {
     themeDark: 'Dark',
     themeSystemHint: 'Follows your phone setting.',
     close: 'Close',
+    noData: 'No data',
+    donutNote: 'Share of amounts that succeeded or failed in each currency.',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -135,6 +137,8 @@ const fr: Record<TranslationKey, string> = {
     themeDark: 'Sombre',
     themeSystemHint: 'Suit le réglage de votre téléphone.',
     close: 'Fermer',
+    noData: 'Aucune donnée',
+    donutNote: 'Part des montants réussis ou échoués dans chaque devise.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
