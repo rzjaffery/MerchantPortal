@@ -66,6 +66,7 @@ const en = {
     themeLight: 'Light',
     themeDark: 'Dark',
     themeSystemHint: 'Follows your phone setting.',
+    close: 'Close',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -133,6 +134,7 @@ const fr: Record<TranslationKey, string> = {
     themeLight: 'Clair',
     themeDark: 'Sombre',
     themeSystemHint: 'Suit le réglage de votre téléphone.',
+    close: 'Fermer',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
