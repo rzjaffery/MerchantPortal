@@ -18,6 +18,7 @@ import ProfileAvatar from '@/components/common/ProfileAvatar';
 
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useDrawer } from '@/context/DrawerContext';
 import { getMerchantProfile } from '@/services/profile/profileService';
 
 import type { MerchantProfile } from '@/types/profile';
@@ -50,6 +51,7 @@ export default function MerchantScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const { t } = useLanguage();
+    const { openDrawer } = useDrawer();
 
     const [profile, setProfile] = useState<MerchantProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -127,8 +129,9 @@ export default function MerchantScreen() {
         <View style={styles.screen}>
             <AppHeader
                 title={t('merchant')}
-                leftIcon="back"
-                onLeftPress={router.back}
+                leftIcon="menu"
+                onLeftPress={openDrawer}
+                // onProfilePress={() => router.push('/profile')}
             />
 
             <ScrollView

@@ -36,11 +36,13 @@ export function mapMerchantProfile(
         merchantCode: clean(response.merchantcode),
         merchantType: clean(response.merchanttype),
         fullName,
+        merchantName: clean(response.merchantname),
         businessName: clean(response.businessname),
         email: clean(response.emailaddress),
         mobileNumber: clean(response.mobilenumber),
         city: clean(response.city),
         country: clean(response.country),
+        address: clean(response.address),
         usdBalance: toAmount(wallets?.walletUSDBalance),
         cdfBalance: toAmount(wallets?.walletCDFBalance),
     };

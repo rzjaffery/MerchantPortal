@@ -117,10 +117,11 @@ const menuItems = [
     //         web: 'point_of_sale',
     //     },
     // },
-    // {
-    //     label: 'Dynamic QR',
-    //     icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
-    // },
+        {
+            label: 'Dynamic QR',
+            route: '/dynamic-qr',
+            icon: { ios: 'qrcode', android: 'qr_code_2', web: 'qr_code_2' },
+        },
     // {
     //     label: 'Dynamic Payment Via Mobile',
     //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
@@ -266,8 +267,22 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                                     onPress={() => {
                                         handleClose();
 
-                                        if (route !== null && !selected) {
-                                            router.navigate(route);
+                                        if (route === null || selected) {
+                                            return;
+                                        }
+
+                                        if (route === '/dashboard') {
+                                            // Going Home: close every screen
+                                            // above it instead of adding one.
+                                            router.dismissTo('/dashboard');
+                                        } else if (pathname === '/dashboard') {
+                                            // From Home: open on top of it,
+                                            // so Back returns to Home.
+                                            router.push(route);
+                                        } else {
+                                            // From another menu screen: swap it,
+                                            // so Home stays directly underneath.
+                                            router.replace(route);
                                         }
                                     }}
                                     accessibilityRole="button"

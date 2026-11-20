@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
 
 import { PaperProvider } from 'react-native-paper';
 import { createPaperTheme } from '@/theme/paperTheme';
@@ -42,6 +43,14 @@ function AppNavigator() {
             void SplashScreen.hideAsync();
         }
     }, [isLoading]);
+
+    // Color of the window behind every screen. It shows for a moment
+    // during screen animations, so it must match the current theme.
+    useEffect(() => {
+        SystemUI.setBackgroundColorAsync(colors.background).catch(() => {
+            // Not critical: only affects the brief gap during animations.
+        });
+    }, [colors.background]);
 
     if (isLoading) {
         return (
@@ -84,6 +93,7 @@ function AppNavigator() {
                     <Stack.Screen name="dashboard" />
                     <Stack.Screen name="profile" />
                     <Stack.Screen name="merchant" />
+                    <Stack.Screen name="dynamic-qr" />
                 </Stack.Protected>
             </Stack>
         </>

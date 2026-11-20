@@ -15,6 +15,7 @@ export interface MerchantProfileApiResponse extends ApiResponse {
     mobilenumber: string | null;
     city: string | null;
     country: string | null;
+    address: string | null;
     walletsAndLinkedAccounts: {
         walletUSDBalance: string | null;
         walletCDFBalance: string | null;
@@ -27,11 +28,13 @@ export interface MerchantProfile {
     merchantCode: string;
     merchantType: string;
     fullName: string;
+    merchantName: string;
     businessName: string;
     email: string;
     mobileNumber: string;
     city: string;
     country: string;
+    address: string;
     usdBalance: number;
     cdfBalance: number;
 }
