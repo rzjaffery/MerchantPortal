@@ -53,3 +53,34 @@ export function formatDateTime(date: Date | null): string {
 export function formatServerDateTime(text: string): string {
     return formatDateTime(parseServerDateTime(text));
 }
+
+// The period choices used by the list screens.
+export type PeriodKey = 'today' | 'yesterday' | 'last7Days' | 'last30Days';
+
+// Start and end of a period, both included.
+// "today" runs from 00:00:00 to 23:59:59 today.
+export function periodRange(period: PeriodKey): { from: Date; to: Date } {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date(startOfToday);
+    endOfToday.setHours(23, 59, 59, 0);
+
+    // A copy of a date moved by a number of days.
+    const shift = (date: Date, days: number) => {
+        const copy = new Date(date);
+        copy.setDate(copy.getDate() + days);
+        return copy;
+    };
+
+    switch (period) {
+        case 'yesterday':
+            return { from: shift(startOfToday, -1), to: shift(endOfToday, -1) };
+        case 'last7Days':
+            return { from: shift(startOfToday, -6), to: endOfToday };
+        case 'last30Days':
+            return { from: shift(startOfToday, -29), to: endOfToday };
+        default:
+            return { from: startOfToday, to: endOfToday };
+    }
+}

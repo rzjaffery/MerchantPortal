@@ -1,0 +1,981 @@
+diff --git a/src/app/_layout.tsx b/src/app/_layout.tsx
+index 2a47dce..3749071 100644
+--- a/src/app/_layout.tsx
++++ b/src/app/_layout.tsx
+@@ -95,6 +95,7 @@ function AppNavigator() {
+                     <Stack.Screen name="merchant" />
+                     <Stack.Screen name="dynamic-qr" />
+                     <Stack.Screen name="qr-payment-log" />
++                    <Stack.Screen name="transactions" />
+                 </Stack.Protected>
+             </Stack>
+         </>
+diff --git a/src/app/transactions.tsx b/src/app/transactions.tsx
+new file mode 100644
+index 0000000..bb03a6c
+--- /dev/null
++++ b/src/app/transactions.tsx
+@@ -0,0 +1,669 @@
++// src/app/transactions.tsx
++import { useCallback, useEffect, useRef, useState } from 'react';
++
++import {
++    ActivityIndicator,
++    FlatList,
++    Pressable,
++    RefreshControl,
++    ScrollView,
++    StyleSheet,
++    Text,
++    View,
++    useWindowDimensions,
++} from 'react-native';
++
++import { useRouter } from 'expo-router';
++import { Modal, Portal } from 'react-native-paper';
++
++import AppButton from '@/components/common/AppButton';
++import AppCard from '@/components/common/AppCard';
++import AppHeader from '@/components/common/AppHeader';
++
++import { useAuth } from '@/context/AuthContext';
++import { useDrawer } from '@/context/DrawerContext';
++import { useLanguage } from '@/context/LanguageContext';
++import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
++
++import { ApiError } from '@/services/api/apiClient';
++import { getTransactions } from '@/services/transactions/transactionsService';
++import { formatDateTime, periodRange } from '@/utils/dateTime';
++import type { PeriodKey } from '@/utils/dateTime';
++
++import type { TranslationKey } from '@/i18n/translations';
++import type {
++    Transaction,
++    TransactionCurrencyFilter,
++    TransactionStatusFilter,
++} from '@/types/transactions';
++import type { AppColors } from '@/theme/colors';
++import { radius, spacing } from '@/theme/metrics';
++import { fontFamilies } from '@/theme/typography';
++
++// How many transactions to ask the server for at a time.
++const PAGE_SIZE = 20;
++
++// Response codes that mean "nothing found" rather than "something broke".
++// Empty for now. After the first run, look in the Expo terminal for a line
++// like "[API] searchtransactionlist -> 162 ..." when a period has no
++// transactions, and add that code here as a string, e.g. ['162'].
++const NO_RECORD_CODES: string[] = [];
++
++const periods: PeriodKey[] = ['today', 'yesterday', 'last7Days', 'last30Days'];
++
++const statusOptions: { value: TransactionStatusFilter; labelKey: TranslationKey }[] = [
++    { value: 'ALL', labelKey: 'all' },
++    { value: 'APPROVED', labelKey: 'successful' },
++    { value: 'DECLINED', labelKey: 'failed' },
++];
++
++const currencyOptions: { value: TransactionCurrencyFilter; label: string }[] = [
++    { value: 'USD', label: 'USD' },
++    { value: 'CDF', label: 'CDF' },
++];
++
++// Shows an amount with separators, e.g. 15,000.00
++function formatAmount(amount: number): string {
++    return amount.toLocaleString('en-US', {
++        minimumFractionDigits: 2,
++        maximumFractionDigits: 2,
++    });
++}
++
++export default function TransactionsScreen() {
++    const { colors } = useAppTheme();
++    const styles = useThemedStyles(createStyles);
++
++    const router = useRouter();
++    const { user, accessToken } = useAuth();
++    const { t } = useLanguage();
++    const { openDrawer } = useDrawer();
++    const { height: screenHeight } = useWindowDimensions();
++
++    const username = user?.username ?? '';
++    const userId = user?.id ?? '';
++    const merchantId = user?.merchantId ?? '';
++
++    // Filters. All three are sent to the server.
++    const [period, setPeriod] = useState<PeriodKey>('today');
++    const [status, setStatus] = useState<TransactionStatusFilter>('ALL');
++    const [currency, setCurrency] = useState<TransactionCurrencyFilter>('ALL');
++
++    // Data from the server.
++    const [transactions, setTransactions] = useState<Transaction[]>([]);
++    const [totalCount, setTotalCount] = useState(0);
++    const [page, setPage] = useState(1);
++    const [isLoading, setIsLoading] = useState(true);
++    const [isRefreshing, setIsRefreshing] = useState(false);
++    const [isLoadingMore, setIsLoadingMore] = useState(false);
++    const [error, setError] = useState('');
++
++    // The transaction open in the details sheet.
++    const [selected, setSelected] = useState<Transaction | null>(null);
++
++    const detailsMaxHeight = Math.round(screenHeight * 0.55);
++
++    // Counts the requests. If the user taps another filter while a request
++    // is still running, the older answer arrives late and is thrown away.
++    const latestRequest = useRef(0);
++
++    // Loads one page. Page 1 replaces the list, later pages are added.
++    const loadPage = useCallback(
++        async (pageToLoad: number) => {
++            if (!username || !accessToken || !merchantId) {
++                return;
++            }
++
++            latestRequest.current += 1;
++            const thisRequest = latestRequest.current;
++
++            const { from, to } = periodRange(period);
++
++            const result = await getTransactions({
++                username,
++                token: accessToken,
++                userId,
++                merchantId,
++                from,
++                to,
++                status,
++                currency,
++                page: pageToLoad,
++                pageSize: PAGE_SIZE,
++            });
++
++            if (thisRequest !== latestRequest.current) {
++                return;
++            }
++
++            setTransactions((current) =>
++                pageToLoad === 1
++                    ? result.transactions
++                    : [...current, ...result.transactions]
++            );
++            setTotalCount(result.totalCount);
++            setPage(pageToLoad);
++        },
++        [username, accessToken, userId, merchantId, period, status, currency]
++    );
++
++    // Shows the right message for a failed request.
++    const handleLoadError = useCallback(
++        (loadError: unknown) => {
++            if (
++                loadError instanceof ApiError &&
++                NO_RECORD_CODES.includes(loadError.code)
++            ) {
++                setTransactions([]);
++                setTotalCount(0);
++                setError('');
++                return;
++            }
++
++            setError(
++                loadError instanceof Error
++                    ? loadError.message
++                    : t('transactionsLoadFailed')
++            );
++        },
++        [t]
++    );
++
++    // First load, and again whenever a filter changes.
++    const loadFirstPage = useCallback(async () => {
++        setIsLoading(true);
++        setError('');
++
++        try {
++            await loadPage(1);
++        } catch (loadError) {
++            setTransactions([]);
++            handleLoadError(loadError);
++        } finally {
++            setIsLoading(false);
++        }
++    }, [loadPage, handleLoadError]);
++
++    useEffect(() => {
++        void loadFirstPage();
++    }, [loadFirstPage]);
++
++    // Pull down to refresh.
++    async function handleRefresh() {
++        setIsRefreshing(true);
++        setError('');
++
++        try {
++            await loadPage(1);
++        } catch (loadError) {
++            handleLoadError(loadError);
++        } finally {
++            setIsRefreshing(false);
++        }
++    }
++
++    async function handleLoadMore() {
++        setIsLoadingMore(true);
++
++        try {
++            await loadPage(page + 1);
++        } catch (loadError) {
++            handleLoadError(loadError);
++        } finally {
++            setIsLoadingMore(false);
++        }
++    }
++
++    const hasMore = transactions.length < totalCount;
++
++    // Colours for the status badge.
++    function statusColors(isApproved: boolean) {
++        return {
++            text: isApproved ? colors.status.success : colors.status.error,
++            background: colors.background,
++        };
++    }
++
++    // A row of selectable chips, used for the three filters.
++    function renderChips<T extends string>(
++        options: { value: T; label: string }[],
++        value: T,
++        onChange: (next: T) => void
++    ) {
++        return (
++            <ScrollView
++                horizontal
++                showsHorizontalScrollIndicator={false}
++                contentContainerStyle={styles.chipRow}
++            >
++                {options.map((option) => {
++                    const isSelected = option.value === value;
++
++                    return (
++                        <Pressable
++                            key={option.value}
++                            onPress={() => onChange(option.value)}
++                            accessibilityRole="button"
++                            accessibilityState={{ selected: isSelected }}
++                            style={[
++                                styles.chip,
++                                isSelected && styles.chipSelected,
++                            ]}
++                        >
++                            <Text
++                                style={[
++                                    styles.chipText,
++                                    isSelected && styles.chipTextSelected,
++                                ]}
++                            >
++                                {option.label}
++                            </Text>
++                        </Pressable>
++                    );
++                })}
++            </ScrollView>
++        );
++    }
++
++    // Filters and the record count, shown above the list.
++    const listHeader = (
++        <View>
++            {renderChips(
++                periods.map((key) => ({ value: key, label: t(key) })),
++                period,
++                setPeriod
++            )}
++
++            <Text style={styles.filterLabel}>{t('status')}</Text>
++            {renderChips(
++                statusOptions.map((option) => ({
++                    value: option.value,
++                    label: t(option.labelKey),
++                })),
++                status,
++                setStatus
++            )}
++
++            <Text style={styles.filterLabel}>{t('currency')}</Text>
++            {renderChips(
++                [{ value: 'ALL' as const, label: t('all') }, ...currencyOptions],
++                currency,
++                setCurrency
++            )}
++
++            {!isLoading && !error ? (
++                <Text style={styles.countText}>
++                    {transactions.length} / {totalCount} {t('records')}
++                </Text>
++            ) : null}
++        </View>
++    );
++
++    // The rows shown in the details sheet. Empty ones are hidden.
++    const detailRows = selected
++        ? [
++            { label: t('referenceNumber'), value: selected.id },
++            { label: t('dateAndTime'), value: formatDateTime(selected.dateTime) },
++            {
++                label: t('amount'),
++                value: `${formatAmount(selected.amount)} ${selected.currency}`.trim(),
++            },
++            {
++                label: t('status'),
++                value: selected.isApproved ? t('successful') : t('failed'),
++            },
++            {
++                label: t('description'),
++                value: [selected.responseCode, selected.responseDescription]
++                    .filter(Boolean)
++                    .join(' - '),
++            },
++            { label: t('paymentMethod'), value: selected.paymentMethod },
++            { label: t('transactionType'), value: selected.transactionType },
++            { label: t('invoiceId'), value: selected.invoiceId },
++            { label: t('mobileNumber'), value: selected.mobileNumber },
++            { label: t('destinationMobile'), value: selected.destinationMobileNumber },
++            { label: t('businessName'), value: selected.businessName },
++        ].filter((row) => row.value)
++        : [];
++
++    return (
++        <View style={styles.screen}>
++            <AppHeader
++                title={t('transactions')}
++                leftIcon="menu"
++                onLeftPress={openDrawer}
++                onProfilePress={() => router.push('/profile')}
++            />
++
++            <FlatList
++                data={isLoading || error ? [] : transactions}
++                // A reference number can repeat, so the position is added.
++                keyExtractor={(item, index) => `${item.id}-${index}`}
++                contentContainerStyle={styles.listContent}
++                ListHeaderComponent={listHeader}
++                refreshControl={
++                    <RefreshControl
++                        refreshing={isRefreshing}
++                        onRefresh={() => void handleRefresh()}
++                        colors={[colors.brand.primary]}
++                        tintColor={colors.brand.primary}
++                    />
++                }
++                renderItem={({ item }) => {
++                    const badge = statusColors(item.isApproved);
++
++                    return (
++                        <Pressable
++                            onPress={() => setSelected(item)}
++                            accessibilityRole="button"
++                        >
++                            <AppCard style={styles.entryCard}>
++                                <View style={styles.entryTopRow}>
++                                    <Text
++                                        style={styles.entryTitle}
++                                        numberOfLines={1}
++                                    >
++                                        {item.paymentMethod ||
++                                            item.transactionType ||
++                                            '—'}
++                                    </Text>
++
++                                    <Text
++                                        style={styles.entryAmount}
++                                        numberOfLines={1}
++                                        adjustsFontSizeToFit
++                                        minimumFontScale={0.6}
++                                    >
++                                        {formatAmount(item.amount)} {item.currency}
++                                    </Text>
++                                </View>
++
++                                <View style={styles.entryBottomRow}>
++                                    <Text style={styles.entryMeta}>
++                                        {formatDateTime(item.dateTime)}
++                                    </Text>
++
++                                    <View
++                                        style={[
++                                            styles.badge,
++                                            { backgroundColor: badge.background },
++                                        ]}
++                                    >
++                                        <Text
++                                            style={[
++                                                styles.badgeText,
++                                                { color: badge.text },
++                                            ]}
++                                        >
++                                            {item.isApproved
++                                                ? t('successful')
++                                                : t('failed')}
++                                        </Text>
++                                    </View>
++                                </View>
++
++                                <Text style={styles.entryMeta} numberOfLines={1}>
++                                    {t('referenceNumber')}: {item.id || '—'}
++                                </Text>
++                            </AppCard>
++                        </Pressable>
++                    );
++                }}
++                ListEmptyComponent={
++                    isLoading ? (
++                        <View style={styles.stateBox}>
++                            <ActivityIndicator
++                                size="large"
++                                color={colors.brand.primary}
++                            />
++                            <Text style={styles.mutedText}>
++                                {t('loadingTransactions')}
++                            </Text>
++                        </View>
++                    ) : error ? (
++                        <View style={styles.stateBox}>
++                            <Text style={styles.errorText}>{error}</Text>
++                            <AppButton
++                                title={t('tryAgain')}
++                                variant="outline"
++                                onPress={() => void loadFirstPage()}
++                            />
++                        </View>
++                    ) : (
++                        <View style={styles.stateBox}>
++                            <Text style={styles.mutedText}>
++                                {t('noTransactions')}
++                            </Text>
++                        </View>
++                    )
++                }
++                ListFooterComponent={
++                    !isLoading && !error && hasMore ? (
++                        <View style={styles.footer}>
++                            <AppButton
++                                title={t('loadMore')}
++                                variant="outline"
++                                loading={isLoadingMore}
++                                disabled={isLoadingMore}
++                                onPress={() => void handleLoadMore()}
++                            />
++                        </View>
++                    ) : undefined
++                }
++            />
++
++            {/* Details sheet */}
++            <Portal>
++                <Modal
++                    visible={selected !== null}
++                    onDismiss={() => setSelected(null)}
++                    contentContainerStyle={styles.sheet}
++                >
++                    <Text style={styles.sheetTitle}>
++                        {t('transactionDetails')}
++                    </Text>
++
++                    <ScrollView
++                        style={[
++                            styles.sheetScroll,
++                            { maxHeight: detailsMaxHeight },
++                        ]}
++                    >
++                        {detailRows.map((row) => (
++                            <View key={row.label} style={styles.detailRow}>
++                                <Text style={styles.detailLabel}>
++                                    {row.label}
++                                </Text>
++                                <Text style={styles.detailValue}>
++                                    {row.value}
++                                </Text>
++                            </View>
++                        ))}
++                    </ScrollView>
++
++                    <View style={styles.sheetButtons}>
++                        <AppButton
++                            title={t('close')}
++                            variant="outline"
++                            onPress={() => setSelected(null)}
++                        />
++                    </View>
++                </Modal>
++            </Portal>
++        </View>
++    );
++}
++
++// Styles are built from the current colours, so they follow light or dark mode.
++const createStyles = (colors: AppColors) =>
++    StyleSheet.create({
++        screen: {
++            flex: 1,
++            backgroundColor: colors.background,
++        },
++
++        listContent: {
++            padding: spacing.lg,
++            paddingBottom: spacing.xxxl,
++        },
++
++        chipRow: {
++            gap: spacing.sm,
++            paddingBottom: spacing.md,
++        },
++
++        chip: {
++            paddingHorizontal: spacing.lg,
++            paddingVertical: spacing.sm,
++            borderRadius: radius.full,
++            borderWidth: 1,
++            borderColor: colors.border,
++            backgroundColor: colors.surface,
++        },
++
++        chipSelected: {
++            backgroundColor: colors.brand.primary,
++            borderColor: colors.brand.primary,
++        },
++
++        chipText: {
++            fontFamily: fontFamilies.medium,
++            fontSize: 12,
++            color: colors.text.secondary,
++        },
++
++        chipTextSelected: {
++            fontFamily: fontFamilies.semiBold,
++            color: colors.brand.onPrimary,
++        },
++
++        filterLabel: {
++            fontFamily: fontFamilies.medium,
++            fontSize: 12,
++            color: colors.text.secondary,
++            marginBottom: spacing.sm,
++        },
++
++        countText: {
++            fontFamily: fontFamilies.medium,
++            fontSize: 12,
++            color: colors.text.secondary,
++            marginBottom: spacing.md,
++        },
++
++        entryCard: {
++            marginBottom: spacing.sm,
++            gap: spacing.xs,
++        },
++
++        entryTopRow: {
++            flexDirection: 'row',
++            alignItems: 'center',
++            gap: spacing.md,
++        },
++
++        entryTitle: {
++            flex: 1,
++            fontFamily: fontFamilies.semiBold,
++            fontSize: 15,
++            color: colors.text.primary,
++        },
++
++        entryAmount: {
++            flexShrink: 1,
++            fontFamily: fontFamilies.bold,
++            fontSize: 16,
++            color: colors.text.primary,
++            textAlign: 'right',
++        },
++
++        entryBottomRow: {
++            flexDirection: 'row',
++            alignItems: 'center',
++            justifyContent: 'space-between',
++        },
++
++        entryMeta: {
++            fontFamily: fontFamilies.regular,
++            fontSize: 12,
++            color: colors.text.secondary,
++        },
++
++        badge: {
++            paddingHorizontal: spacing.sm,
++            paddingVertical: 2,
++            borderRadius: radius.full,
++        },
++
++        badgeText: {
++            fontFamily: fontFamilies.semiBold,
++            fontSize: 11,
++        },
++
++        stateBox: {
++            alignItems: 'center',
++            gap: spacing.md,
++            paddingVertical: spacing.xxxl,
++        },
++
++        mutedText: {
++            fontFamily: fontFamilies.regular,
++            fontSize: 13,
++            color: colors.text.secondary,
++            textAlign: 'center',
++        },
++
++        errorText: {
++            fontFamily: fontFamilies.medium,
++            fontSize: 13,
++            color: colors.status.error,
++            textAlign: 'center',
++        },
++
++        footer: {
++            marginTop: spacing.md,
++        },
++
++        sheet: {
++            backgroundColor: colors.surface,
++            marginHorizontal: spacing.lg,
++            padding: spacing.lg,
++            borderRadius: radius.xl,
++        },
++
++        sheetTitle: {
++            fontFamily: fontFamilies.semiBold,
++            fontSize: 17,
++            color: colors.text.primary,
++            marginBottom: spacing.md,
++        },
++
++        sheetScroll: {
++            flexGrow: 0,
++        },
++
++        detailRow: {
++            paddingVertical: spacing.sm,
++            borderTopWidth: 1,
++            borderTopColor: colors.border,
++        },
++
++        detailLabel: {
++            fontFamily: fontFamilies.regular,
++            fontSize: 11,
++            color: colors.text.secondary,
++        },
++
++        detailValue: {
++            fontFamily: fontFamilies.semiBold,
++            fontSize: 14,
++            color: colors.text.primary,
++            marginTop: 2,
++        },
++
++        sheetButtons: {
++            gap: spacing.sm,
++            marginTop: spacing.md,
++        },
++    });
+diff --git a/src/components/common/AppDrawer.tsx b/src/components/common/AppDrawer.tsx
+index f919e8a..9b25e84 100644
+--- a/src/components/common/AppDrawer.tsx
++++ b/src/components/common/AppDrawer.tsx
+@@ -65,14 +65,15 @@ const menuItems = [
+     //         web: 'swap_horiz',
+     //     },
+     // },
+-    // {
+-    //     label: 'Live Transactions',
+-    //     icon: {
+-    //         ios: 'list.bullet.rectangle',
+-    //         android: 'receipt_long',
+-    //         web: 'receipt_long',
+-    //     },
+-    // },
++    {
++        label: 'Transactions',
++        route: '/transactions',
++        icon: {
++            ios: 'list.bullet.rectangle',
++            android: 'receipt_long',
++            web: 'receipt_long',
++        },
++    },
+     // {
+     //     label: 'illicocash Reporting',
+     //     icon: { ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' },
+diff --git a/src/i18n/translations.ts b/src/i18n/translations.ts
+index bab8021..fbf40ba 100644
+--- a/src/i18n/translations.ts
++++ b/src/i18n/translations.ts
+@@ -119,6 +119,14 @@ const en = {
+     logLoadFailed: 'Unable to load the QR log.',
+     noLogEntries: 'No QR codes in this period.',
+     noLogMatches: 'No entries match your filters.',
++    transactions: 'Transactions',
++    transactionDetails: 'Transaction Details',
++    paymentMethod: 'Payment Method',
++    dateAndTime: 'Date and Time',
++    description: 'Description',
++    destinationMobile: 'Recipient Mobile Number',
++    loadingTransactions: 'Loading transactions...',
++    transactionsLoadFailed: 'Unable to load transactions.',
+ };
+
+ export type TranslationKey = keyof typeof en;
+@@ -239,6 +247,14 @@ const fr: Record<TranslationKey, string> = {
+     logLoadFailed: 'Impossible de charger le journal QR.',
+     noLogEntries: 'Aucun code QR sur cette période.',
+     noLogMatches: 'Aucune entrée ne correspond à vos filtres.',
++    transactions: 'Transactions',
++    transactionDetails: 'Détails de la transaction',
++    paymentMethod: 'Mode de paiement',
++    dateAndTime: 'Date et heure',
++    description: 'Description',
++    destinationMobile: 'Numéro mobile du destinataire',
++    loadingTransactions: 'Chargement des transactions...',
++    transactionsLoadFailed: 'Impossible de charger les transactions.',
+ };
+
+ export const translations: Record<Language, Record<TranslationKey, string>> = {
+diff --git a/src/services/transactions/transactionsService.ts b/src/services/transactions/transactionsService.ts
+new file mode 100644
+index 0000000..5062e38
+--- /dev/null
++++ b/src/services/transactions/transactionsService.ts
+@@ -0,0 +1,117 @@
++// src/services/transactions/transactionsService.ts
++import { API_ENCRYPT_KEY } from '@/constants/api';
++import { postToMerchantApi } from '@/services/api/apiClient';
++import { parseServerDateTime, toServerDateTime } from '@/utils/dateTime';
++
++import type {
++    Transaction,
++    TransactionApiItem,
++    TransactionApiResponse,
++    TransactionCurrencyFilter,
++    TransactionPage,
++    TransactionStatusFilter,
++} from '@/types/transactions';
++
++// What the server expects in "respfilter" for each status choice.
++// 'ALL' sends nothing, so the server returns every status.
++const STATUS_CODES: Record<TransactionStatusFilter, string | undefined> = {
++    ALL: undefined,
++    APPROVED: '00',
++    DECLINED: 'D',
++};
++
++// Text from a value that may be text, a number or missing.
++function readText(value: string | number | null | undefined): string {
++    if (value === null || value === undefined) {
++        return '';
++    }
++
++    return String(value).trim();
++}
++
++// The server sends money in cents (1085444 means 10,854.44),
++// so divide by 100 to get the real amount.
++function readAmount(value: string | number | null | undefined): number {
++    const parsed = Number(value);
++
++    return Number.isFinite(parsed) ? parsed / 100 : 0;
++}
++
++function mapTransaction(item: TransactionApiItem): Transaction {
++    const responseCode = readText(item.respCode);
++
++    return {
++        id: readText(item.txnRefNumber),
++        dateTime: parseServerDateTime(readText(item.tranDateTime)),
++        amount: readAmount(item.amountTran),
++        currency: readText(item.tranCurrency),
++        isApproved: responseCode === '00',
++        responseCode,
++        responseDescription: readText(item.respCodeDesc),
++        paymentMethod: readText(item.paymentMethod),
++        transactionType: readText(item.trantype),
++        invoiceId: readText(item.invoiceid),
++        mobileNumber: readText(item.mobilenumber),
++        destinationMobileNumber: readText(item.destmobilenumber),
++        businessName: readText(item.businessname),
++        reason: readText(item.reason),
++    };
++}
++
++interface TransactionsRequest {
++    username: string;
++    token: string;
++    userId: string;
++    merchantId: string;
++    // Start and end of the period, both included.
++    from: Date;
++    to: Date;
++    status: TransactionStatusFilter;
++    currency: TransactionCurrencyFilter;
++    // Page number, starting at 1.
++    page: number;
++    pageSize: number;
++}
++
++// Loads one page of the merchant's transactions.
++export async function getTransactions(
++    request: TransactionsRequest
++): Promise<TransactionPage> {
++    // The website's "illicocash Reporting" page uses this same endpoint.
++    // Like the QR log, the server needs a date range and page fields.
++    const response = await postToMerchantApi<TransactionApiResponse>(
++        'searchtransactionlist',
++        {
++            username: request.username,
++            userid: request.userId,
++            token: request.token,
++            encryptkey: API_ENCRYPT_KEY,
++            merchantid: request.merchantId,
++            startdate: toServerDateTime(request.from),
++            enddate: toServerDateTime(request.to),
++            // A value of undefined is left out of the request.
++            respfilter: STATUS_CODES[request.status],
++            trancurrency:
++                request.currency === 'ALL' ? undefined : request.currency,
++            pagecount: String(request.page),
++            pagesize: String(request.pageSize),
++        }
++    );
++
++    const items = response.transactionportallist ?? [];
++
++    // While developing, print the field NAMES of the first row (never the
++    // values) so we can check them against TransactionApiItem.
++    if (__DEV__ && items.length > 0) {
++        console.log(
++            `[Transactions] first row fields: ${Object.keys(items[0]).join(', ')}`
++        );
++    }
++
++    const total = Number(response.totalcount);
++
++    return {
++        transactions: items.map(mapTransaction),
++        totalCount: Number.isFinite(total) ? total : items.length,
++    };
++}
+diff --git a/src/types/transactions.ts b/src/types/transactions.ts
+new file mode 100644
+index 0000000..61dfa61
+--- /dev/null
++++ b/src/types/transactions.ts
+@@ -0,0 +1,61 @@
++// src/types/transactions.ts
++import type { ApiResponse } from '@/services/api/apiClient';
++
++// One transaction exactly as the server sends it.
++// Every field can be missing, so every field is optional.
++export interface TransactionApiItem {
++    txnRefNumber?: string | null;
++    // 14 digits: 20261023160413 (year, month, day, hour, minute, second).
++    tranDateTime?: string | null;
++    // In cents: "1085444" means 10,854.44.
++    amountTran?: string | null;
++    tranCurrency?: string | null;
++    // "00" means approved. Anything else means the payment did not go through.
++    respCode?: string | null;
++    respCodeDesc?: string | null;
++    paymentMethod?: string | null;
++    trantype?: string | null;
++    invoiceid?: string | null;
++    mobilenumber?: string | null;
++    destmobilenumber?: string | null;
++    businessname?: string | null;
++    reason?: string | null;
++}
++
++// The answer of the transaction search.
++export interface TransactionApiResponse extends ApiResponse {
++    transactionportallist: TransactionApiItem[] | null;
++    // How many transactions exist in total for this search, e.g. "42".
++    totalcount: string | null;
++}
++
++// One transaction in the shape the screen uses.
++export interface Transaction {
++    // The reference number. It is also used as the list key.
++    id: string;
++    dateTime: Date | null;
++    // The real amount, already divided by 100.
++    amount: number;
++    currency: string;
++    isApproved: boolean;
++    responseCode: string;
++    responseDescription: string;
++    paymentMethod: string;
++    transactionType: string;
++    invoiceId: string;
++    mobileNumber: string;
++    destinationMobileNumber: string;
++    businessName: string;
++    reason: string;
++}
++
++export interface TransactionPage {
++    transactions: Transaction[];
++    totalCount: number;
++}
++
++// The status choices: All, Successful (code 00) or Failed (code D).
++export type TransactionStatusFilter = 'ALL' | 'APPROVED' | 'DECLINED';
++
++// The currency choices.
++export type TransactionCurrencyFilter = 'ALL' | 'USD' | 'CDF';
+diff --git a/src/utils/dateTime.ts b/src/utils/dateTime.ts
+index 40bd6e4..dce50ad 100644
+--- a/src/utils/dateTime.ts
++++ b/src/utils/dateTime.ts
+@@ -52,4 +52,35 @@ export function formatDateTime(date: Date | null): string {
+ // "20261120105130" becomes "2026-11-20 10:51:30".
+ export function formatServerDateTime(text: string): string {
+     return formatDateTime(parseServerDateTime(text));
+-}
+\ No newline at end of file
++}
++
++// The period choices used by the list screens.
++export type PeriodKey = 'today' | 'yesterday' | 'last7Days' | 'last30Days';
++
++// Start and end of a period, both included.
++// "today" runs from 00:00:00 to 23:59:59 today.
++export function periodRange(period: PeriodKey): { from: Date; to: Date } {
++    const startOfToday = new Date();
++    startOfToday.setHours(0, 0, 0, 0);
++
++    const endOfToday = new Date(startOfToday);
++    endOfToday.setHours(23, 59, 59, 0);
++
++    // A copy of a date moved by a number of days.
++    const shift = (date: Date, days: number) => {
++        const copy = new Date(date);
++        copy.setDate(copy.getDate() + days);
++        return copy;
++    };
++
++    switch (period) {
++        case 'yesterday':
++            return { from: shift(startOfToday, -1), to: shift(endOfToday, -1) };
++        case 'last7Days':
++            return { from: shift(startOfToday, -6), to: endOfToday };
++        case 'last30Days':
++            return { from: shift(startOfToday, -29), to: endOfToday };
++        default:
++            return { from: startOfToday, to: endOfToday };
++    }
++}

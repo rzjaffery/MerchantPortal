@@ -9,7 +9,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     View,
 } from 'react-native';
 
@@ -65,14 +64,15 @@ const menuItems = [
     //         web: 'swap_horiz',
     //     },
     // },
-    // {
-    //     label: 'Live Transactions',
-    //     icon: {
-    //         ios: 'list.bullet.rectangle',
-    //         android: 'receipt_long',
-    //         web: 'receipt_long',
-    //     },
-    // },
+    {
+        label: 'Transactions',
+        route: '/transactions',
+        icon: {
+            ios: 'list.bullet.rectangle',
+            android: 'receipt_long',
+            web: 'receipt_long',
+        },
+    },
     // {
     //     label: 'illicocash Reporting',
     //     icon: { ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' },
@@ -279,11 +279,19 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                                         } else if (pathname === '/dashboard') {
                                             // From Home: open on top of it,
                                             // so Back returns to Home.
-                                            router.push(route);
+                                            router.push(
+                                                route as Parameters<
+                                                    typeof router.push
+                                                >[0]
+                                            );
                                         } else {
                                             // From another menu screen: swap it,
                                             // so Home stays directly underneath.
-                                            router.replace(route);
+                                            router.replace(
+                                                route as Parameters<
+                                                    typeof router.replace
+                                                >[0]
+                                            );
                                         }
                                     }}
                                     accessibilityRole="button"

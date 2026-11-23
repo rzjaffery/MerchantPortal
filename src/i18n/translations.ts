@@ -119,6 +119,14 @@ const en = {
     logLoadFailed: 'Unable to load the QR log.',
     noLogEntries: 'No QR codes in this period.',
     noLogMatches: 'No entries match your filters.',
+    transactions: 'Transactions',
+    transactionDetails: 'Transaction Details',
+    paymentMethod: 'Payment Method',
+    dateAndTime: 'Date and Time',
+    description: 'Description',
+    destinationMobile: 'Recipient Mobile Number',
+    loadingTransactions: 'Loading transactions...',
+    transactionsLoadFailed: 'Unable to load transactions.',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -239,6 +247,14 @@ const fr: Record<TranslationKey, string> = {
     logLoadFailed: 'Impossible de charger le journal QR.',
     noLogEntries: 'Aucun code QR sur cette période.',
     noLogMatches: 'Aucune entrée ne correspond à vos filtres.',
+    transactions: 'Transactions',
+    transactionDetails: 'Détails de la transaction',
+    paymentMethod: 'Mode de paiement',
+    dateAndTime: 'Date et heure',
+    description: 'Description',
+    destinationMobile: 'Numéro mobile du destinataire',
+    loadingTransactions: 'Chargement des transactions...',
+    transactionsLoadFailed: 'Impossible de charger les transactions.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
