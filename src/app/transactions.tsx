@@ -27,13 +27,11 @@ import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 import { ApiError } from '@/services/api/apiClient';
 import { getTransactions } from '@/services/transactions/transactionsService';
-import { formatDateTime, periodRange } from '@/utils/dateTime';
-import type { PeriodKey } from '@/utils/dateTime';
+import { formatDateTime } from '@/utils/dateTime';
 
 import type { TranslationKey } from '@/i18n/translations';
 import type {
     Transaction,
-    TransactionCurrencyFilter,
     TransactionStatusFilter,
 } from '@/types/transactions';
 import type { AppColors } from '@/theme/colors';
@@ -45,21 +43,14 @@ const PAGE_SIZE = 20;
 
 // Response codes that mean "nothing found" rather than "something broke".
 // Empty for now. After the first run, look in the Expo terminal for a line
-// like "[API] searchtransactionlist -> 162 ..." when a period has no
+// like "[API] gettransactionlist -> 162 ..." when there are no
 // transactions, and add that code here as a string, e.g. ['162'].
 const NO_RECORD_CODES: string[] = [];
-
-const periods: PeriodKey[] = ['today', 'yesterday', 'last7Days', 'last30Days'];
 
 const statusOptions: { value: TransactionStatusFilter; labelKey: TranslationKey }[] = [
     { value: 'ALL', labelKey: 'all' },
     { value: 'APPROVED', labelKey: 'successful' },
     { value: 'DECLINED', labelKey: 'failed' },
-];
-
-const currencyOptions: { value: TransactionCurrencyFilter; label: string }[] = [
-    { value: 'USD', label: 'USD' },
-    { value: 'CDF', label: 'CDF' },
 ];
 
 // Shows an amount with separators, e.g. 15,000.00
@@ -84,10 +75,8 @@ export default function TransactionsScreen() {
     const userId = user?.id ?? '';
     const merchantId = user?.merchantId ?? '';
 
-    // Filters. All three are sent to the server.
-    const [period, setPeriod] = useState<PeriodKey>('today');
+    // The status filter is sent to the server.
     const [status, setStatus] = useState<TransactionStatusFilter>('ALL');
-    const [currency, setCurrency] = useState<TransactionCurrencyFilter>('ALL');
 
     // Data from the server.
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -117,17 +106,12 @@ export default function TransactionsScreen() {
             latestRequest.current += 1;
             const thisRequest = latestRequest.current;
 
-            const { from, to } = periodRange(period);
-
             const result = await getTransactions({
                 username,
                 token: accessToken,
                 userId,
                 merchantId,
-                from,
-                to,
                 status,
-                currency,
                 page: pageToLoad,
                 pageSize: PAGE_SIZE,
             });
@@ -144,7 +128,7 @@ export default function TransactionsScreen() {
             setTotalCount(result.totalCount);
             setPage(pageToLoad);
         },
-        [username, accessToken, userId, merchantId, period, status, currency]
+        [username, accessToken, userId, merchantId, status]
     );
 
     // Shows the right message for a failed request.
@@ -224,7 +208,7 @@ export default function TransactionsScreen() {
         };
     }
 
-    // A row of selectable chips, used for the three filters.
+    // A row of selectable chips, used for the status filter.
     function renderChips<T extends string>(
         options: { value: T; label: string }[],
         value: T,
@@ -268,12 +252,6 @@ export default function TransactionsScreen() {
     // Filters and the record count, shown above the list.
     const listHeader = (
         <View>
-            {renderChips(
-                periods.map((key) => ({ value: key, label: t(key) })),
-                period,
-                setPeriod
-            )}
-
             <Text style={styles.filterLabel}>{t('status')}</Text>
             {renderChips(
                 statusOptions.map((option) => ({
@@ -284,16 +262,9 @@ export default function TransactionsScreen() {
                 setStatus
             )}
 
-            <Text style={styles.filterLabel}>{t('currency')}</Text>
-            {renderChips(
-                [{ value: 'ALL' as const, label: t('all') }, ...currencyOptions],
-                currency,
-                setCurrency
-            )}
-
             {!isLoading && !error ? (
                 <Text style={styles.countText}>
-                    {transactions.length} / {totalCount} {t('records')}
+                    {transactions.length} {t('records')}
                 </Text>
             ) : null}
         </View>

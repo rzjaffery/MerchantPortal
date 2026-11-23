@@ -1,23 +1,21 @@
 // src/services/transactions/transactionsService.ts
 import { API_ENCRYPT_KEY } from '@/constants/api';
 import { postToMerchantApi } from '@/services/api/apiClient';
-import { parseServerDateTime, toServerDateTime } from '@/utils/dateTime';
+import { parseServerDateTime } from '@/utils/dateTime';
 
 import type {
     Transaction,
     TransactionApiItem,
     TransactionApiResponse,
-    TransactionCurrencyFilter,
     TransactionPage,
     TransactionStatusFilter,
 } from '@/types/transactions';
 
-// What the server expects in "respfilter" for each status choice.
-// 'ALL' sends nothing, so the server returns every status.
-const STATUS_CODES: Record<TransactionStatusFilter, string | undefined> = {
-    ALL: undefined,
-    APPROVED: '00',
-    DECLINED: 'D',
+// What the server expects in "typefilter" for each status choice.
+const STATUS_FILTERS: Record<TransactionStatusFilter, string> = {
+    ALL: 'ALL',
+    APPROVED: 'APPROVED',
+    DECLINED: 'FAILED',
 };
 
 // Text from a value that may be text, a number or missing.
@@ -63,11 +61,9 @@ interface TransactionsRequest {
     token: string;
     userId: string;
     merchantId: string;
-    // Start and end of the period, both included.
-    from: Date;
-    to: Date;
+    // "1" is a top-level merchant. Defaults to "1" when not given.
+    merchantType?: string;
     status: TransactionStatusFilter;
-    currency: TransactionCurrencyFilter;
     // Page number, starting at 1.
     page: number;
     pageSize: number;
@@ -77,24 +73,21 @@ interface TransactionsRequest {
 export async function getTransactions(
     request: TransactionsRequest
 ): Promise<TransactionPage> {
-    // The website's "illicocash Reporting" page uses this same endpoint.
-    // Like the QR log, the server needs a date range and page fields.
+    // The website's "Live Transactions" page uses this same endpoint.
+    // Key names must be exactly these, all lowercase: the server ignores
+    // keys it does not know. This is the same body as the Postman call.
     const response = await postToMerchantApi<TransactionApiResponse>(
-        'searchtransactionlist',
+        'gettransactionlist',
         {
             username: request.username,
-            userid: request.userId,
             token: request.token,
-            encryptkey: API_ENCRYPT_KEY,
-            merchantid: request.merchantId,
-            startdate: toServerDateTime(request.from),
-            enddate: toServerDateTime(request.to),
-            // A value of undefined is left out of the request.
-            respfilter: STATUS_CODES[request.status],
-            trancurrency:
-                request.currency === 'ALL' ? undefined : request.currency,
+            typefilter: STATUS_FILTERS[request.status],
             pagecount: String(request.page),
             pagesize: String(request.pageSize),
+            merchantid: request.merchantId,
+            merchanttype: request.merchantType ?? '1',
+            userid: request.userId,
+            encryptkey: API_ENCRYPT_KEY,
         }
     );
 
