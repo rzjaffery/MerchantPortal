@@ -53,7 +53,7 @@ const menuItems = [
     //     },
     // },
     {
-        label: 'Merchant',
+        label: 'Merchant Profile',
         route: '/merchant',
         icon: { ios: 'storefront', android: 'storefront', web: 'storefront' },
     },
@@ -131,7 +131,7 @@ const menuItems = [
     //     icon: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
     // },
     {
-        label: 'Merchant Payment Log',
+        label: 'Merchant Payment History',
         route: '/qr-payment-log',
         icon: { ios: 'list.bullet', android: 'list_alt', web: 'list_alt' },
     },

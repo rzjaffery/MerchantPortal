@@ -155,7 +155,7 @@ export default function ProfileScreen() {
     return (
         <View style={styles.screen}>
             <AppHeader
-                title={t('myProfile')}
+                title={t('userProfile')}
                 leftIcon="back"
                 onLeftPress={() => router.back()}
             />

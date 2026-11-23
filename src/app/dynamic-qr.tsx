@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
-import { Modal, Portal } from 'react-native-paper';
+import { Menu, Modal, Portal } from 'react-native-paper';
 import { SymbolView } from 'expo-symbols';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -35,28 +35,21 @@ import { getMerchantProfile } from '@/services/profile/profileService';
 
 import type { QrCurrency, Terminal } from '@/types/dynamicQr';
 import type { AppColors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/metrics';
+import { dimensions, radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
+import {
+    formatServerDateTime,
+    toServerDateTime,
+} from '@/utils/dateTime';
 
 const currencies: QrCurrency[] = ['USD', 'CDF'];
 
 // The highest amount the form accepts.
 const MAX_AMOUNT = 1_000_000_000;
 
-// Adds a leading zero: 7 becomes "07".
-function pad(value: number): string {
-    return String(value).padStart(2, '0');
-}
-
-// The current time as the website shows it: 20261120105130
-// (year, month, day, hour, minute, second).
+// The current time in the server's format, e.g. 20261120105130.
 function currentPaymentDateTime(): string {
-    const now = new Date();
-
-    return (
-        `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}` +
-        `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
-    );
+    return toServerDateTime(new Date());
 }
 
 // Formats money with two decimals, e.g. 10,854.44
@@ -126,6 +119,9 @@ export default function DynamicQrScreen() {
     const [invoiceError, setInvoiceError] = useState('');
     const [amountError, setAmountError] = useState('');
     const [currencyError, setCurrencyError] = useState('');
+
+    // Whether the currency dropdown is open.
+    const [currencyMenuVisible, setCurrencyMenuVisible] = useState(false);
 
     // Generating and the result.
     const [isGenerating, setIsGenerating] = useState(false);
@@ -292,7 +288,7 @@ export default function DynamicQrScreen() {
         setPaymentDateTime(currentPaymentDateTime());
     }
 
-    // Read-only fields, shown greyed out like on the website.
+    // Merchant details, shown as information (not editable).
     const readOnlyFields = [
         { key: 'merchantId', label: t('merchantId'), value: merchantId },
         { key: 'merchantName', label: t('merchantName'), value: merchantName },
@@ -300,7 +296,7 @@ export default function DynamicQrScreen() {
         {
             key: 'dateTime',
             label: t('paymentDateTime'),
-            value: paymentDateTime,
+            value: formatServerDateTime(paymentDateTime),
         },
     ];
 
@@ -377,192 +373,233 @@ export default function DynamicQrScreen() {
                         </AppCard>
                     ) : (
                         /* ---------- Form ---------- */
-                        <AppCard>
+                        <>
                             {/* Terminal ID */}
-                            <Text style={styles.fieldLabel}>
-                                {t('terminalId')}
-                            </Text>
-
-                            {terminalsLoading ? (
-                                <View style={styles.inlineState}>
-                                    <ActivityIndicator
-                                        color={colors.brand.primary}
-                                    />
-                                    <Text style={styles.mutedText}>
-                                        {t('loadingTerminals')}
-                                    </Text>
-                                </View>
-                            ) : terminalsError ? (
-                                <View style={styles.inlineState}>
-                                    <Text style={styles.errorText}>
-                                        {terminalsError}
-                                    </Text>
-                                    <AppButton
-                                        title={t('tryAgain')}
-                                        variant="outline"
-                                        onPress={() => void loadTerminals()}
-                                    />
-                                </View>
-                            ) : terminals.length === 0 ? (
-                                <Text style={styles.mutedText}>
-                                    {t('noTerminals')}
+                            <AppCard style={styles.card}>
+                                <Text style={styles.fieldLabel}>
+                                    {t('terminalId')}
                                 </Text>
-                            ) : (
-                                <Pressable
-                                    onPress={() => setPickerVisible(true)}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={t('selectTerminal')}
-                                    style={styles.pickerField}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.pickerText,
-                                            !terminal &&
-                                            styles.pickerPlaceholder,
-                                        ]}
-                                        numberOfLines={1}
-                                    >
-                                        {terminal
-                                            ? terminalLabel(terminal)
-                                            : t('selectTerminal')}
-                                    </Text>
 
-                                    <SymbolView
-                                        name={{
-                                            ios: 'chevron.down',
-                                            android: 'expand_more',
-                                            web: 'expand_more',
-                                        }}
-                                        size={20}
-                                        tintColor={colors.text.secondary}
-                                    />
-                                </Pressable>
-                            )}
+                                {terminalsLoading ? (
+                                    <View style={styles.inlineState}>
+                                        <ActivityIndicator
+                                            color={colors.brand.primary}
+                                        />
+                                        <Text style={styles.mutedText}>
+                                            {t('loadingTerminals')}
+                                        </Text>
+                                    </View>
+                                ) : terminalsError ? (
+                                    <View style={styles.inlineState}>
+                                        <Text style={styles.errorText}>
+                                            {terminalsError}
+                                        </Text>
+                                        <AppButton
+                                            title={t('tryAgain')}
+                                            variant="outline"
+                                            onPress={() => void loadTerminals()}
+                                        />
+                                    </View>
+                                ) : terminals.length === 0 ? (
+                                    <Text style={styles.mutedText}>
+                                        {t('noTerminals')}
+                                    </Text>
+                                ) : (
+                                    <Pressable
+                                        onPress={() => setPickerVisible(true)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t('selectTerminal')}
+                                        style={styles.pickerField}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.pickerText,
+                                                !terminal &&
+                                                styles.pickerPlaceholder,
+                                            ]}
+                                            numberOfLines={1}
+                                        >
+                                            {terminal
+                                                ? terminalLabel(terminal)
+                                                : t('selectTerminal')}
+                                        </Text>
+
+                                        <SymbolView
+                                            name={{
+                                                ios: 'chevron.down',
+                                                android: 'expand_more',
+                                                web: 'expand_more',
+                                            }}
+                                            size={20}
+                                            tintColor={colors.text.secondary}
+                                        />
+                                    </Pressable>
+                                )}
+                            </AppCard>
 
                             {/* The rest appears once a terminal is chosen. */}
                             {terminal ? (
-                                <View style={styles.formBody}>
-                                    {profileError ? (
-                                        <View style={styles.inlineState}>
-                                            <Text style={styles.errorText}>
-                                                {t('profileLoadFailed')}
-                                            </Text>
-                                            <AppButton
-                                                title={t('tryAgain')}
-                                                variant="outline"
-                                                onPress={() =>
-                                                    void loadProfile()
-                                                }
-                                            />
-                                        </View>
-                                    ) : null}
+                                <>
+                                    {/* Merchant card: information only */}
+                                    <AppCard style={styles.card}>
+                                        <Text style={styles.cardTitle}>
+                                            {t('merchant')}
+                                        </Text>
 
-                                    {/* Greyed-out values */}
-                                    {readOnlyFields.map((field) => (
-                                        <View
-                                            key={field.key}
-                                            style={styles.readOnlyBlock}
-                                        >
-                                            <Text style={styles.fieldLabel}>
-                                                {field.label}
-                                            </Text>
+                                        {profileError ? (
+                                            <View style={styles.inlineState}>
+                                                <Text style={styles.errorText}>
+                                                    {t('profileLoadFailed')}
+                                                </Text>
+                                                <AppButton
+                                                    title={t('tryAgain')}
+                                                    variant="outline"
+                                                    onPress={() =>
+                                                        void loadProfile()
+                                                    }
+                                                />
+                                            </View>
+                                        ) : null}
 
-                                            <View style={styles.readOnlyBox}>
-                                                <Text
-                                                    style={styles.readOnlyText}
-                                                    numberOfLines={1}
-                                                >
+                                        {readOnlyFields.map((field, index) => (
+                                            <View
+                                                key={field.key}
+                                                style={[
+                                                    styles.infoRow,
+                                                    index > 0 &&
+                                                    styles.infoRowDivider,
+                                                ]}
+                                            >
+                                                <Text style={styles.infoLabel}>
+                                                    {field.label}
+                                                </Text>
+
+                                                <Text style={styles.infoValue}>
                                                     {field.value || '—'}
                                                 </Text>
                                             </View>
-                                        </View>
-                                    ))}
+                                        ))}
+                                    </AppCard>
 
-                                    {/* Fields the merchant fills in */}
-                                    <AppInput
-                                        label={t('customerMobile')}
-                                        value={mobile}
-                                        onChangeText={(value) => {
-                                            setMobile(value);
-                                            setMobileError('');
-                                        }}
-                                        placeholder={t('mobilePlaceholder')}
-                                        keyboardType="phone-pad"
-                                        autoCapitalize="none"
-                                        error={mobileError}
-                                    />
+                                    {/* Payment card: fields the merchant fills in */}
+                                    <AppCard style={styles.card}>
+                                        <AppInput
+                                            label={t('customerMobile')}
+                                            value={mobile}
+                                            onChangeText={(value) => {
+                                                setMobile(value);
+                                                setMobileError('');
+                                            }}
+                                            placeholder={t('mobilePlaceholder')}
+                                            keyboardType="phone-pad"
+                                            autoCapitalize="none"
+                                            error={mobileError}
+                                        />
 
-                                    <AppInput
-                                        label={t('invoiceId')}
-                                        value={invoiceId}
-                                        onChangeText={(value) => {
-                                            setInvoiceId(value);
-                                            setInvoiceError('');
-                                        }}
-                                        placeholder={t('invoicePlaceholder')}
-                                        autoCapitalize="none"
-                                        error={invoiceError}
-                                    />
+                                        <AppInput
+                                            label={t('invoiceId')}
+                                            value={invoiceId}
+                                            onChangeText={(value) => {
+                                                setInvoiceId(value);
+                                                setInvoiceError('');
+                                            }}
+                                            placeholder={t('invoicePlaceholder')}
+                                            autoCapitalize="none"
+                                            error={invoiceError}
+                                            bold
+                                        />
 
-                                    <AppInput
-                                        label={t('amount')}
-                                        value={amountText}
-                                        onChangeText={(value) => {
-                                            setAmountText(value);
-                                            setAmountError('');
-                                        }}
-                                        placeholder="0.00"
-                                        keyboardType="decimal-pad"
-                                        autoCapitalize="none"
-                                        error={amountError}
-                                    />
-
-                                    {/* Currency */}
-                                    <Text style={styles.fieldLabel}>
-                                        {t('currency')}
-                                    </Text>
-
-                                    <View style={styles.segmented}>
-                                        {currencies.map((item) => {
-                                            const selected =
-                                                item === currency;
-
-                                            return (
-                                                <Pressable
-                                                    key={item}
-                                                    onPress={() => {
-                                                        setCurrency(item);
-                                                        setCurrencyError('');
+                                        {/* Amount with the currency dropdown beside it */}
+                                        <View style={styles.amountRow}>
+                                            <View style={styles.amountField}>
+                                                <AppInput
+                                                    label={t('amount')}
+                                                    value={amountText}
+                                                    onChangeText={(value) => {
+                                                        setAmountText(value);
+                                                        setAmountError('');
                                                     }}
-                                                    accessibilityRole="button"
-                                                    accessibilityState={{
-                                                        selected,
-                                                    }}
-                                                    style={[
-                                                        styles.segment,
-                                                        selected &&
-                                                        styles.segmentSelected,
-                                                    ]}
+                                                    placeholder="0.00"
+                                                    keyboardType="decimal-pad"
+                                                    autoCapitalize="none"
+                                                    error={amountError}
+                                                    bold
+                                                />
+                                            </View>
+
+                                            <View style={styles.currencyField}>
+                                                <Text style={styles.fieldLabel}>
+                                                    {t('currency')}
+                                                </Text>
+
+                                                <Menu
+                                                    visible={currencyMenuVisible}
+                                                    onDismiss={() =>
+                                                        setCurrencyMenuVisible(false)
+                                                    }
+                                                    anchor={
+                                                        <Pressable
+                                                            onPress={() =>
+                                                                setCurrencyMenuVisible(true)
+                                                            }
+                                                            accessibilityRole="button"
+                                                            accessibilityLabel={t('currency')}
+                                                            style={[
+                                                                styles.currencyBox,
+                                                                currencyError
+                                                                    ? styles.currencyBoxError
+                                                                    : null,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.currencyText,
+                                                                    !currency &&
+                                                                    styles.pickerPlaceholder,
+                                                                ]}
+                                                            >
+                                                                {currency ?? '—'}
+                                                            </Text>
+
+                                                            <SymbolView
+                                                                name={{
+                                                                    ios: 'chevron.down',
+                                                                    android: 'expand_more',
+                                                                    web: 'expand_more',
+                                                                }}
+                                                                size={18}
+                                                                tintColor={colors.text.secondary}
+                                                            />
+                                                        </Pressable>
+                                                    }
+                                                    contentStyle={styles.currencyMenu}
                                                 >
-                                                    <Text
-                                                        style={[
-                                                            styles.segmentText,
-                                                            selected &&
-                                                            styles.segmentTextSelected,
-                                                        ]}
-                                                    >
-                                                        {item}
-                                                    </Text>
-                                                </Pressable>
-                                            );
-                                        })}
-                                    </View>
+                                                    {currencies.map((item) => (
+                                                        <Menu.Item
+                                                            key={item}
+                                                            title={item}
+                                                            onPress={() => {
+                                                                setCurrency(item);
+                                                                setCurrencyError('');
+                                                                setCurrencyMenuVisible(false);
+                                                            }}
+                                                            titleStyle={[
+                                                                styles.currencyMenuText,
+                                                                item === currency &&
+                                                                styles.currencyMenuTextSelected,
+                                                            ]}
+                                                        />
+                                                    ))}
+                                                </Menu>
 
-                                    {currencyError ? (
-                                        <Text style={styles.fieldError}>
-                                            {currencyError}
-                                        </Text>
-                                    ) : null}
+                                                {currencyError ? (
+                                                    <Text style={styles.fieldError}>
+                                                        {currencyError}
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        </View>
+                                    </AppCard>
 
                                     {generateError ? (
                                         <Text style={styles.generateError}>
@@ -570,23 +607,19 @@ export default function DynamicQrScreen() {
                                         </Text>
                                     ) : null}
 
-                                    <View style={styles.generateButton}>
-                                        <AppButton
-                                            title={t('generateQr')}
-                                            onPress={() =>
-                                                void handleGenerate()
-                                            }
-                                            loading={isGenerating}
-                                            disabled={
-                                                isGenerating ||
-                                                profileError ||
-                                                !merchantName
-                                            }
-                                        />
-                                    </View>
-                                </View>
+                                    <AppButton
+                                        title={t('generateQr')}
+                                        onPress={() => void handleGenerate()}
+                                        loading={isGenerating}
+                                        disabled={
+                                            isGenerating ||
+                                            profileError ||
+                                            !merchantName
+                                        }
+                                    />
+                                </>
                             ) : null}
-                        </AppCard>
+                        </>
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -709,58 +742,97 @@ const createStyles = (colors: AppColors) =>
             color: colors.text.secondary,
         },
 
-        formBody: {
-            marginTop: spacing.lg,
+
+
+
+
+
+
+
+
+
+        card: {
+            marginBottom: spacing.md,
         },
 
-        readOnlyBlock: {
-            marginBottom: spacing.lg,
+        cardTitle: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 15,
+            color: colors.text.primary,
+            marginBottom: spacing.xs,
         },
 
-        readOnlyBox: {
-            minHeight: 48,
-            justifyContent: 'center',
-            paddingHorizontal: spacing.lg,
+        infoRow: {
+            paddingVertical: spacing.sm,
+        },
+
+        infoRowDivider: {
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+        },
+
+        infoLabel: {
+            fontFamily: fontFamilies.regular,
+            fontSize: 11,
+            color: colors.text.secondary,
+        },
+
+        infoValue: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 14,
+            color: colors.text.primary,
+            marginTop: 2,
+        },
+
+        amountRow: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: spacing.sm,
+        },
+
+        amountField: {
+            flex: 1,
+        },
+
+        currencyField: {
+            width: 110,
+        },
+
+        currencyBox: {
+            height: dimensions.inputHeight,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: spacing.md,
             borderRadius: radius.lg,
             borderWidth: 1,
-            borderStyle: 'dashed',
             borderColor: colors.border,
-            backgroundColor: colors.background,
+            backgroundColor: colors.surface,
         },
 
-        readOnlyText: {
-            fontFamily: fontFamilies.regular,
-            fontSize: 14,
-            color: colors.text.secondary,
+        currencyBoxError: {
+            borderColor: colors.status.error,
         },
 
-        segmented: {
-            flexDirection: 'row',
-            backgroundColor: colors.background,
-            borderRadius: radius.md,
-            padding: spacing.xs,
+        currencyText: {
+            fontFamily: fontFamilies.bold,
+            fontSize: 16,
+            color: colors.text.primary,
         },
 
-        segment: {
-            flex: 1,
-            alignItems: 'center',
-            paddingVertical: spacing.sm,
-            borderRadius: radius.md,
+        currencyMenu: {
+            backgroundColor: colors.surface,
         },
 
-        segmentSelected: {
-            backgroundColor: colors.brand.primary,
-        },
-
-        segmentText: {
+        currencyMenuText: {
             fontFamily: fontFamilies.medium,
-            fontSize: 13,
-            color: colors.text.secondary,
+            fontSize: 14,
+            color: colors.text.primary,
         },
 
-        segmentTextSelected: {
-            fontFamily: fontFamilies.semiBold,
-            color: colors.brand.onPrimary,
+        currencyMenuTextSelected: {
+            fontFamily: fontFamilies.bold,
+            color: colors.brand.pressed,
         },
 
         fieldError: {
@@ -774,12 +846,9 @@ const createStyles = (colors: AppColors) =>
             fontFamily: fontFamilies.medium,
             fontSize: 13,
             color: colors.status.error,
-            marginTop: spacing.lg,
+            marginBottom: spacing.md,
         },
 
-        generateButton: {
-            marginTop: spacing.xl,
-        },
 
         resultCard: {
             alignItems: 'center',

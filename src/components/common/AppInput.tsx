@@ -27,6 +27,8 @@ interface AppInputProps {
     error?: string;
     returnKeyType?: TextInputProps['returnKeyType'];
     onSubmitEditing?: TextInputProps['onSubmitEditing'];
+    // Shows the typed text in bold, e.g. for amounts.
+    bold?: boolean;
 }
 
 export default function AppInput({
@@ -40,6 +42,7 @@ export default function AppInput({
                                      error,
                                      returnKeyType = 'next',
                                      onSubmitEditing,
+                                     bold = false,
                                  }: AppInputProps) {
     const { colors } = useAppTheme();
     const styles = useThemedStyles(createStyles);
@@ -65,7 +68,7 @@ export default function AppInput({
                 onSubmitEditing={onSubmitEditing}
                 error={Boolean(error)}
                 activeOutlineColor={colors.text.primary}
-                style={styles.input}
+                style={[styles.input, bold && styles.inputBold]}
                 outlineStyle={styles.outline}
                 right={
                     secureTextEntry ? (
@@ -129,6 +132,11 @@ const createStyles = (colors: AppColors) =>
             backgroundColor: colors.surface,
             fontFamily: fontFamilies.regular,
             fontSize: 14,
+        },
+
+        inputBold: {
+            fontFamily: fontFamilies.bold,
+            fontSize: 16,
         },
 
         label: {
