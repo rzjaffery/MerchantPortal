@@ -15,6 +15,12 @@ import {
 
 import { useRouter } from 'expo-router';
 import { Modal, Portal } from 'react-native-paper';
+import {
+    DatePickerModal,
+    en as datePickerEn,
+    fr as datePickerFr,
+    registerTranslation,
+} from 'react-native-paper-dates';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
@@ -27,7 +33,7 @@ import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 import { ApiError } from '@/services/api/apiClient';
 import { getTransactions } from '@/services/transactions/transactionsService';
-import { formatDateTime } from '@/utils/dateTime';
+import { formatDateTime, periodRange, type PeriodKey } from '@/utils/dateTime';
 
 import type { TranslationKey } from '@/i18n/translations';
 import type {
@@ -38,14 +44,27 @@ import type { AppColors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 
+// Teaches the calendar popup the two languages of the app.
+registerTranslation('en', datePickerEn);
+registerTranslation('fr', datePickerFr);
+
 // How many transactions to ask the server for at a time.
 const PAGE_SIZE = 20;
 
 // Response codes that mean "nothing found" rather than "something broke".
-// Empty for now. After the first run, look in the Expo terminal for a line
-// like "[API] gettransactionlist -> 162 ..." when there are no
-// transactions, and add that code here as a string, e.g. ['162'].
-const NO_RECORD_CODES: string[] = [];
+// If a period with no transactions shows an error, look in the Expo terminal
+// for a line like "[API] searchtransactionlist -> 71 ..." and add that code
+// here as a string.
+const NO_RECORD_CODES: string[] = ['71'];
+
+// The date choices. Each one is turned into a start and end date by
+// periodRange() in src/utils/dateTime.ts.
+const periodOptions: { value: PeriodKey; labelKey: TranslationKey }[] = [
+    { value: 'today', labelKey: 'today' },
+    { value: 'yesterday', labelKey: 'yesterday' },
+    { value: 'last7Days', labelKey: 'last7Days' },
+    { value: 'last30Days', labelKey: 'last30Days' },
+];
 
 const statusOptions: { value: TransactionStatusFilter; labelKey: TranslationKey }[] = [
     { value: 'ALL', labelKey: 'all' },
@@ -67,7 +86,7 @@ export default function TransactionsScreen() {
 
     const router = useRouter();
     const { user, accessToken } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { openDrawer } = useDrawer();
     const { height: screenHeight } = useWindowDimensions();
 
@@ -75,8 +94,15 @@ export default function TransactionsScreen() {
     const userId = user?.id ?? '';
     const merchantId = user?.merchantId ?? '';
 
-    // The status filter is sent to the server.
+    // The filters are sent to the server.
     const [status, setStatus] = useState<TransactionStatusFilter>('ALL');
+    // 'custom' means the user picked their own dates in the calendar.
+    const [period, setPeriod] = useState<PeriodKey | 'custom'>('last7Days');
+    const [customRange, setCustomRange] = useState<{
+        from: Date;
+        to: Date;
+    } | null>(null);
+    const [pickerVisible, setPickerVisible] = useState(false);
 
     // Data from the server.
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -84,7 +110,6 @@ export default function TransactionsScreen() {
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState('');
 
     // The transaction open in the details sheet.
@@ -92,11 +117,14 @@ export default function TransactionsScreen() {
 
     const detailsMaxHeight = Math.round(screenHeight * 0.55);
 
+    // Used to jump back to the top when the page changes.
+    const listRef = useRef<FlatList<Transaction>>(null);
+
     // Counts the requests. If the user taps another filter while a request
     // is still running, the older answer arrives late and is thrown away.
     const latestRequest = useRef(0);
 
-    // Loads one page. Page 1 replaces the list, later pages are added.
+    // Loads one page. The list always shows just that page.
     const loadPage = useCallback(
         async (pageToLoad: number) => {
             if (!username || !accessToken || !merchantId) {
@@ -106,12 +134,20 @@ export default function TransactionsScreen() {
             latestRequest.current += 1;
             const thisRequest = latestRequest.current;
 
+            // Own dates when "Custom" is chosen, otherwise a ready-made period.
+            const { from, to } =
+                period === 'custom' && customRange
+                    ? customRange
+                    : periodRange(period === 'custom' ? 'last7Days' : period);
+
             const result = await getTransactions({
                 username,
                 token: accessToken,
                 userId,
                 merchantId,
                 status,
+                from,
+                to,
                 page: pageToLoad,
                 pageSize: PAGE_SIZE,
             });
@@ -120,15 +156,11 @@ export default function TransactionsScreen() {
                 return;
             }
 
-            setTransactions((current) =>
-                pageToLoad === 1
-                    ? result.transactions
-                    : [...current, ...result.transactions]
-            );
+            setTransactions(result.transactions);
             setTotalCount(result.totalCount);
             setPage(pageToLoad);
         },
-        [username, accessToken, userId, merchantId, status]
+        [username, accessToken, userId, merchantId, status, period, customRange]
     );
 
     // Shows the right message for a failed request.
@@ -186,19 +218,32 @@ export default function TransactionsScreen() {
         }
     }
 
-    async function handleLoadMore() {
-        setIsLoadingMore(true);
+    // Opens another page (Previous / Next buttons).
+    async function goToPage(pageNumber: number) {
+        if (pageNumber < 1 || pageNumber > totalPages || isLoading) {
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+        listRef.current?.scrollToOffset({ offset: 0, animated: false });
 
         try {
-            await loadPage(page + 1);
+            await loadPage(pageNumber);
         } catch (loadError) {
+            setTransactions([]);
             handleLoadError(loadError);
         } finally {
-            setIsLoadingMore(false);
+            setIsLoading(false);
         }
     }
 
-    const hasMore = transactions.length < totalCount;
+    // How many pages exist: 45 records with 20 per page = 3 pages.
+    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+    // "21-40" for page 2.
+    const firstShown = transactions.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+    const lastShown = (page - 1) * PAGE_SIZE + transactions.length;
 
     // Colours for the status badge.
     function statusColors(isApproved: boolean) {
@@ -249,9 +294,59 @@ export default function TransactionsScreen() {
         );
     }
 
+    // The text on the Custom chip: "2026-01-01 - 2026-02-15", or "Custom".
+    const customLabel = customRange
+        ? `${formatDateTime(customRange.from).slice(0, 10)} - ${formatDateTime(customRange.to).slice(0, 10)}`
+        : t('customDate');
+
+    // Called when the user confirms two dates in the calendar.
+    function handleRangeConfirm({
+        startDate,
+        endDate,
+    }: {
+        startDate: Date | undefined;
+        endDate: Date | undefined;
+    }) {
+        setPickerVisible(false);
+
+        if (!startDate || !endDate) {
+            return;
+        }
+
+        // Whole days: from 00:00:00 of the first day to 23:59:59 of the last.
+        const from = new Date(startDate);
+        from.setHours(0, 0, 0, 0);
+
+        const to = new Date(endDate);
+        to.setHours(23, 59, 59, 0);
+
+        setCustomRange({ from, to });
+        setPeriod('custom');
+    }
+
     // Filters and the record count, shown above the list.
     const listHeader = (
         <View>
+            <Text style={styles.filterLabel}>{t('period')}</Text>
+            {renderChips<PeriodKey | 'custom'>(
+                [
+                    ...periodOptions.map((option) => ({
+                        value: option.value,
+                        label: t(option.labelKey),
+                    })),
+                    { value: 'custom', label: customLabel },
+                ],
+                period,
+                (next) => {
+                    // Custom opens the calendar. The others apply straight away.
+                    if (next === 'custom') {
+                        setPickerVisible(true);
+                    } else {
+                        setPeriod(next);
+                    }
+                }
+            )}
+
             <Text style={styles.filterLabel}>{t('status')}</Text>
             {renderChips(
                 statusOptions.map((option) => ({
@@ -264,7 +359,8 @@ export default function TransactionsScreen() {
 
             {!isLoading && !error ? (
                 <Text style={styles.countText}>
-                    {transactions.length} {t('records')}
+                    {t('showing')} {firstShown}-{lastShown} {t('ofTotal')}{' '}
+                    {totalCount} {t('records')}
                 </Text>
             ) : null}
         </View>
@@ -308,6 +404,7 @@ export default function TransactionsScreen() {
             />
 
             <FlatList
+                ref={listRef}
                 data={isLoading || error ? [] : transactions}
                 // A reference number can repeat, so the position is added.
                 keyExtractor={(item, index) => `${item.id}-${index}`}
@@ -410,18 +507,58 @@ export default function TransactionsScreen() {
                     )
                 }
                 ListFooterComponent={
-                    !isLoading && !error && hasMore ? (
-                        <View style={styles.footer}>
-                            <AppButton
-                                title={t('loadMore')}
-                                variant="outline"
-                                loading={isLoadingMore}
-                                disabled={isLoadingMore}
-                                onPress={() => void handleLoadMore()}
-                            />
+                    !isLoading && !error && totalPages > 1 ? (
+                        <View style={styles.pager}>
+                            <Pressable
+                                onPress={() => void goToPage(page - 1)}
+                                disabled={page <= 1}
+                                accessibilityRole="button"
+                                style={[
+                                    styles.pagerButton,
+                                    page <= 1 && styles.pagerButtonDisabled,
+                                ]}
+                            >
+                                <Text style={styles.pagerButtonText}>
+                                    {t('previous')}
+                                </Text>
+                            </Pressable>
+
+                            <Text style={styles.pagerLabel}>
+                                {t('page')} {page} {t('ofTotal')} {totalPages}
+                            </Text>
+
+                            <Pressable
+                                onPress={() => void goToPage(page + 1)}
+                                disabled={page >= totalPages}
+                                accessibilityRole="button"
+                                style={[
+                                    styles.pagerButton,
+                                    page >= totalPages &&
+                                        styles.pagerButtonDisabled,
+                                ]}
+                            >
+                                <Text style={styles.pagerButtonText}>
+                                    {t('next')}
+                                </Text>
+                            </Pressable>
                         </View>
                     ) : undefined
                 }
+            />
+
+            {/* Calendar popup for picking your own dates */}
+            <DatePickerModal
+                locale={language}
+                mode="range"
+                visible={pickerVisible}
+                onDismiss={() => setPickerVisible(false)}
+                startDate={customRange?.from}
+                endDate={customRange?.to}
+                onConfirm={handleRangeConfirm}
+                label={t('selectDateRange')}
+                saveLabel={t('applyRange')}
+                // Future days have no transactions yet.
+                validRange={{ endDate: new Date() }}
             />
 
             {/* Details sheet */}
@@ -592,8 +729,36 @@ const createStyles = (colors: AppColors) =>
             textAlign: 'center',
         },
 
-        footer: {
+        pager: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             marginTop: spacing.md,
+            gap: spacing.sm,
+        },
+
+        pagerButton: {
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm,
+            borderRadius: radius.full,
+            borderWidth: 1,
+            borderColor: colors.brand.primary,
+        },
+
+        pagerButtonDisabled: {
+            opacity: 0.35,
+        },
+
+        pagerButtonText: {
+            fontFamily: fontFamilies.semiBold,
+            fontSize: 13,
+            color: colors.brand.primary,
+        },
+
+        pagerLabel: {
+            fontFamily: fontFamilies.medium,
+            fontSize: 13,
+            color: colors.text.secondary,
         },
 
         sheet: {
