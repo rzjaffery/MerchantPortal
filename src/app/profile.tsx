@@ -145,11 +145,32 @@ export default function ProfileScreen() {
         },
     ].filter((row) => row.value !== '');
 
-    // Actions whose screens are built in later steps.
-    const upcomingActions = [
+    // Actions in the card. A row with no onPress is not built yet.
+    // Tills (type 4) have no PIN, so the PIN rows are left out for them.
+    const actions: {
+        key: string;
+        icon: typeof icons.lock;
+        title: string;
+        onPress?: () => void;
+    }[] = [
         // { key: 'picture', icon: icons.image, title: t('updateProfilePicture') },
-        { key: 'updatePin', icon: icons.lock, title: t('updatePin') },
-        { key: 'resetPin', icon: icons.lock, title: t('resetPin') },
+        ...(merchantType === '4'
+            ? []
+            : [
+                { key: 'updatePin', icon: icons.lock, title: t('updatePin') },
+                {
+                    key: 'resetPin',
+                    icon: icons.lock,
+                    title: t('resetPin'),
+                    onPress: () => router.push('/reset-pin'),
+                },
+            ]),
+        {
+            key: 'resetPassword',
+            icon: icons.lock,
+            title: t('resetPassword'),
+            onPress: () => router.push('/reset-password'),
+        },
     ];
 
     return (
@@ -213,12 +234,16 @@ export default function ProfileScreen() {
 
                 {/* Picture and PIN actions */}
                 <AppCard style={styles.card}>
-                    {upcomingActions.map((action, index) => (
-                        <View
+                    {actions.map((action, index) => (
+                        <Pressable
                             key={action.key}
-                            style={[
+                            onPress={action.onPress}
+                            disabled={!action.onPress}
+                            accessibilityRole={action.onPress ? 'button' : undefined}
+                            style={({ pressed }) => [
                                 styles.row,
                                 index > 0 && styles.rowDivider,
+                                pressed && styles.pressed,
                             ]}
                         >
                             <View style={styles.rowIcon}>
@@ -233,10 +258,12 @@ export default function ProfileScreen() {
                                 {action.title}
                             </Text>
 
-                            <Text style={styles.rowLabel}>
-                                {t('soon')}
-                            </Text>
-                        </View>
+                            {action.onPress ? null : (
+                                <Text style={styles.rowLabel}>
+                                    {t('soon')}
+                                </Text>
+                            )}
+                        </Pressable>
                     ))}
                 </AppCard>
 

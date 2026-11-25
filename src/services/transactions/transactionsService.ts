@@ -98,7 +98,7 @@ export async function getTransactions(
     if (__DEV__ && items.length > 0) {
         console.log(
             `[Transactions] first row fields: ${Object.keys(items[0]).join(', ')}`
-        );
+        );``
     }
 
     const total = Number(response.totalcount);

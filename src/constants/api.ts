@@ -9,3 +9,7 @@ export const API_ENCRYPT_KEY = process.env.EXPO_PUBLIC_API_ENCRYPT_KEY ?? '';
 
 // true = demo login (no server needed), false = real server.
 export const USE_DEMO_API = false;
+
+export const PIN_ENCRYPT_KEY = process.env.EXPO_PUBLIC_PIN_ENCRYPT_KEY ?? '';
+export const USE_DUMMY_OTP = true;
+export const DUMMY_OTP = '123456';

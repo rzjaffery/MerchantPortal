@@ -51,7 +51,7 @@ function logResult(endpoint: string, code: string, description: string) {
 }
 
 // Field names whose values are never printed.
-const HIDDEN_FIELDS = ['password', 'token', 'encryptkey', 'pindata'];
+const HIDDEN_FIELDS = ['password', 'newpassword', 'token', 'encryptkey', 'pindata', 'newpindata', 'otp'];
 
 // The request body as text, with secret values replaced by <hidden>.
 function describeBody(body: Record<string, unknown>): string {
