@@ -7,7 +7,7 @@ import {
     View,
 } from 'react-native';
 
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,6 +28,7 @@ import { Montserrat_500Medium } from '@expo-google-fonts/montserrat/500Medium';
 import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat/600SemiBold';
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat/700Bold';
 
+import BottomNavBar, { BOTTOM_BAR_ROUTES } from '@/components/common/BottomNavBar';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import type { AppColors } from '@/theme/colors';
 
@@ -37,6 +38,11 @@ function AppNavigator() {
     const { isAuthenticated, isLoading } = useAuth();
     const { colors, isDark } = useAppTheme();
     const styles = useThemedStyles(createStyles);
+    const pathname = usePathname();
+
+    // The bottom bar shows only for logged-in users, on its own screens.
+    const showBottomBar =
+        isAuthenticated && BOTTOM_BAR_ROUTES.includes(pathname);
 
     useEffect(() => {
         if (!isLoading) {
@@ -68,43 +74,50 @@ function AppNavigator() {
             {/* Light status bar text on dark screens, dark text on light ones. */}
             <StatusBar style={isDark ? 'light' : 'dark'} />
 
-            <Stack
-                screenOptions={{
-                    headerShown: false,
-                    contentStyle: {
-                        backgroundColor: colors.background,
-                    },
-                    animation: 'slide_from_right',
-                }}
-            >
-                <Stack.Screen name="index" />
-
-                <Stack.Protected
-                    guard={!isAuthenticated}
-                    redirectTo="/dashboard"
+            <View style={styles.root}>
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                        contentStyle: {
+                            backgroundColor: colors.background,
+                        },
+                        animation: 'slide_from_right',
+                    }}
                 >
-                    <Stack.Screen name="login" />
-                </Stack.Protected>
+                    <Stack.Screen name="index" />
 
-                <Stack.Protected
-                    guard={isAuthenticated}
-                    redirectTo="/login"
-                >
-                    <Stack.Screen name="dashboard" />
-                    <Stack.Screen name="profile" />
-                    <Stack.Screen name="merchant" />
-                    <Stack.Screen name="dynamic-qr" />
-                    <Stack.Screen name="qr-payment-log" />
-                    <Stack.Screen name="transactions" />
-                    <Stack.Screen name="reset-pin" />
-                    <Stack.Screen name="update-pin" />
-                    <Stack.Screen name="reset-password" />
-                    <Stack.Screen name="update-password" />
-                </Stack.Protected>
-            </Stack>
+                    <Stack.Protected
+                        guard={!isAuthenticated}
+                        redirectTo="/dashboard"
+                    >
+                        <Stack.Screen name="login" />
+                    </Stack.Protected>
+
+                    <Stack.Protected
+                        guard={isAuthenticated}
+                        redirectTo="/login"
+                    >
+                        <Stack.Screen name="dashboard" options={tabScreenOptions} />
+                        <Stack.Screen name="profile" options={tabScreenOptions} />
+                        <Stack.Screen name="merchant" options={tabScreenOptions} />
+                        <Stack.Screen name="dynamic-qr" options={tabScreenOptions} />
+                        <Stack.Screen name="qr-payment-log" options={tabScreenOptions} />
+                        <Stack.Screen name="transactions" options={tabScreenOptions} />
+                        <Stack.Screen name="reset-pin" />
+                        <Stack.Screen name="update-pin" />
+                        <Stack.Screen name="reset-password" />
+                        <Stack.Screen name="update-password" />
+                    </Stack.Protected>
+                </Stack>
+
+                {showBottomBar ? <BottomNavBar /> : null}
+            </View>
         </>
     );
 }
+
+// Switching between bottom-bar screens fades, instead of sliding.
+const tabScreenOptions = { animation: 'fade' } as const;
 
 // Gives React Native Paper (buttons, inputs, dialogs) the current mode.
 function ThemedPaperProvider({ children }: PropsWithChildren) {
@@ -168,6 +181,10 @@ export default function RootLayout() {
 // Styles are built from the current colours, so they follow light or dark mode.
 const createStyles = (colors: AppColors) =>
     StyleSheet.create({
+        root: {
+            flex: 1,
+        },
+
         loadingContainer: {
             flex: 1,
             alignItems: 'center',

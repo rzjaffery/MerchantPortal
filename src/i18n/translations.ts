@@ -156,10 +156,10 @@ const en = {
     location: 'Location',
     copied: 'Copied',
     share: 'Share',
+    scanQrToPay: 'Scan the QR code to pay',
     branch: 'Branch',
     shop: 'Shop',
     till: 'Till / Terminal',
-    scanQrToPay:'Scan Qr to Pay',
     branches: 'Branches',
     shops: 'Shops',
     tills: 'Tills',
@@ -171,6 +171,8 @@ const en = {
     cnic: 'ID Number (CNIC)',
     userId: 'User ID',
     subMerchantsLoadFailed: 'Unable to load branches, shops and tills.',
+    navPayments: 'Payments',
+    staticQr: 'Static QR',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -328,10 +330,10 @@ const fr: Record<TranslationKey, string> = {
     location: 'Localisation',
     copied: 'Copié',
     share: 'Partager',
+    scanQrToPay: 'Scannez le code QR pour payer',
     branch: 'Succursale',
     shop: 'Boutique',
     till: 'Caisse / Terminal',
-    scanQrToPay: 'Scanner le QR code pour payer',
     branches: 'Succursales',
     shops: 'Boutiques',
     tills: 'Caisses',
@@ -343,6 +345,8 @@ const fr: Record<TranslationKey, string> = {
     cnic: "Numéro d'identité (CNIC)",
     userId: "ID utilisateur",
     subMerchantsLoadFailed: 'Impossible de charger les succursales, boutiques et caisses.',
+    navPayments: 'Paiements',
+    staticQr: 'QR statique',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

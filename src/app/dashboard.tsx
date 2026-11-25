@@ -22,9 +22,6 @@ import { getDashboardSummary } from '@/services/dashboard/dashboardService';
 
 import type { TranslationKey } from '@/i18n/translations';
 
-import { FAB } from 'react-native-paper';
-import { SymbolView } from 'expo-symbols';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type {
     DashboardPeriod,
@@ -36,7 +33,6 @@ import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 import CurrencySummary from '@/components/dashboard/CurrencySummary';
-import MerchantQrModal from '@/components/dashboard/MerchantQrModal';
 
 // The period chips. A chip with value null is shown greyed out
 // until we know the value the server expects for it.
@@ -77,8 +73,6 @@ export default function DashboardScreen() {
     const username = user?.username ?? '';
     const userId = user?.id ?? '';
 
-    const [qrVisible, setQrVisible] = useState(false);
-    const insets = useSafeAreaInsets();
 
     const loadSummary = useCallback(async () => {
         if (!username || !accessToken || !userId) {
@@ -266,38 +260,6 @@ export default function DashboardScreen() {
                     </>
                 ) : null}
             </ScrollView>
-
-            {/* Floating QR button */}
-            {userId ? (
-                <FAB
-                    customSize={76}
-                    icon={({ size }) => (
-                        <SymbolView
-                            name={{
-                                ios: 'qrcode',
-                                android: 'qr_code_2',
-                                web: 'qr_code_2',
-                            }}
-                            size={size}
-                            tintColor={colors.brand.onPrimary}
-                        />
-                    )}
-                    onPress={() => setQrVisible(true)}
-                    accessibilityLabel={t('myQrCode')}
-                    color={colors.brand.onPrimary}
-                    style={[
-                        styles.fab,
-                        { bottom: insets.bottom + spacing.xl },
-                    ]}
-                />
-            ) : null}
-
-            {/* QR code popup */}
-            <MerchantQrModal
-                visible={qrVisible}
-                onDismiss={() => setQrVisible(false)}
-                qrValue={userId}
-            />
         </View>
     );
 }
@@ -502,12 +464,5 @@ const createStyles = (colors: AppColors) =>
             color: colors.text.primary,
             marginTop: spacing.sm,
             marginBottom: spacing.sm,
-        },
-
-        fab: {
-            position: 'absolute',
-            right: spacing.lg,
-            backgroundColor: colors.brand.primary,
-            borderRadius: radius.full,
         },
     });
