@@ -6,12 +6,10 @@ import {
     StyleSheet,
     Text,
     View,
-    useWindowDimensions,
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import QRCode from 'react-native-qrcode-svg';
 
 import AppButton from '@/components/common/AppButton';
 import AppCard from '@/components/common/AppCard';
@@ -24,7 +22,7 @@ import { getDashboardSummary } from '@/services/dashboard/dashboardService';
 
 import type { TranslationKey } from '@/i18n/translations';
 
-import { FAB, Modal, Portal } from 'react-native-paper';
+import { FAB } from 'react-native-paper';
 import { SymbolView } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -38,6 +36,7 @@ import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 import CurrencySummary from '@/components/dashboard/CurrencySummary';
+import MerchantQrModal from '@/components/dashboard/MerchantQrModal';
 
 // The period chips. A chip with value null is shown greyed out
 // until we know the value the server expects for it.
@@ -80,8 +79,6 @@ export default function DashboardScreen() {
 
     const [qrVisible, setQrVisible] = useState(false);
     const insets = useSafeAreaInsets();
-    const { width: screenWidth } = useWindowDimensions();
-    const qrSize = Math.min(Math.round(screenWidth * 0.65), 280);
 
     const loadSummary = useCallback(async () => {
         if (!username || !accessToken || !userId) {
@@ -296,31 +293,11 @@ export default function DashboardScreen() {
             ) : null}
 
             {/* QR code popup */}
-            <Portal>
-                <Modal
-                    visible={qrVisible}
-                    onDismiss={() => setQrVisible(false)}
-                    contentContainerStyle={styles.qrModal}
-                >
-                    <Text style={styles.qrTitle}>
-                        {t('myQrCode')}
-                    </Text>
-
-                    <Text style={styles.qrCaption}>
-                        {t('qrCaption')}
-                    </Text>
-
-                    <View style={styles.qrBox}>
-                        <QRCode value={userId} size={qrSize}/>
-                    </View>
-
-                    <AppButton
-                        title={t('close')}
-                        variant="outline"
-                        onPress={() => setQrVisible(false)}
-                    />
-                </Modal>
-            </Portal>
+            <MerchantQrModal
+                visible={qrVisible}
+                onDismiss={() => setQrVisible(false)}
+                qrValue={userId}
+            />
         </View>
     );
 }
@@ -532,36 +509,5 @@ const createStyles = (colors: AppColors) =>
             right: spacing.lg,
             backgroundColor: colors.brand.primary,
             borderRadius: radius.full,
-        },
-
-        qrModal: {
-            backgroundColor: colors.surface,
-            marginHorizontal: spacing.xl,
-            padding: spacing.lg,
-            borderRadius: radius.xl,
-            alignItems: 'center',
-            gap: spacing.md,
-        },
-
-        qrTitle: {
-            fontFamily: fontFamilies.semiBold,
-            fontSize: 18,
-            color: colors.text.primary,
-        },
-
-        qrCaption: {
-            fontFamily: fontFamilies.regular,
-            fontSize: 12,
-            color: colors.text.secondary,
-            textAlign: 'center',
-        },
-
-        qrBox: {
-            padding: spacing.md,
-            borderRadius: radius.lg,
-            // Always white, even in dark mode: scanners need a light
-            // background around a QR code.
-            backgroundColor: '#FFFFFF',
-            marginBottom: spacing.sm,
         },
     });

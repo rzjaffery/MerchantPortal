@@ -27,6 +27,7 @@ import type { AppColors } from '@/theme/colors';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
+import {merchantTypeKey} from "@/utils/merchantType";
 
 // Icon names for each platform.
 const icons = {
@@ -83,11 +84,10 @@ export default function MerchantScreen() {
         void loadProfile();
     }, [loadProfile]);
 
-    // The website shows type 1 as "Merchant". Other codes are shown as sent.
-    const merchantTypeLabel =
-        profile?.merchantType === '1'
-            ? t('merchant')
-            : profile?.merchantType ?? '';
+    const typeKey = merchantTypeKey(profile?.merchantType ?? '');
+    const merchantTypeLabel = typeKey
+        ? t(typeKey)
+        : profile?.merchantType ?? '';
 
     // Rows with no value are left out.
     const infoRows = profile

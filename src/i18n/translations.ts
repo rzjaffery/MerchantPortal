@@ -152,6 +152,14 @@ const en = {
     passwordChangedBody: 'Your password was changed. Please log in again with your new password.',
     passwordChangeFailed: 'Unable to change the password. Please try again.',
     ok: 'OK',
+    merchantCode: 'Merchant Code',
+    location: 'Location',
+    copied: 'Copied',
+    share: 'Share',
+    branch: 'Branch',
+    shop: 'Shop',
+    till: 'Till / Terminal',
+    scanQrToPay:'Scan Qr to Pay',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -305,6 +313,14 @@ const fr: Record<TranslationKey, string> = {
     passwordChangedBody: 'Votre mot de passe a été modifié. Veuillez vous reconnecter avec votre nouveau mot de passe.',
     passwordChangeFailed: 'Impossible de modifier le mot de passe. Veuillez réessayer.',
     ok: 'OK',
+    merchantCode: 'Code marchand',
+    location: 'Localisation',
+    copied: 'Copié',
+    share: 'Partager',
+    branch: 'Succursale',
+    shop: 'Boutique',
+    till: 'Caisse / Terminal',
+    scanQrToPay: 'Scanner le QR code pour payer'
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

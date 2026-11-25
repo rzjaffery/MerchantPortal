@@ -31,6 +31,7 @@ import type { TranslationKey } from '@/i18n/translations';
 import { radius, spacing } from '@/theme/metrics';
 import { fontFamilies } from '@/theme/typography';
 import Constants from 'expo-constants';
+import { merchantTypeKey } from '@/utils/merchantType';
 
 // The three appearance choices, in the order they are shown.
 const themeOptions: { value: ThemePreference; labelKey: TranslationKey }[] = [
@@ -126,8 +127,8 @@ export default function ProfileScreen() {
     }
 
     // The website shows type 1 as "Merchant". Other codes are shown as sent.
-    const merchantTypeLabel =
-        merchantType === '1' ? t('merchant') : merchantType;
+    const typeKey = merchantTypeKey(merchantType);
+    const merchantTypeLabel = typeKey ? t(typeKey) : merchantType;
 
     // Rows with no value are left out.
     const infoRows = [

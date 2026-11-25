@@ -149,15 +149,17 @@ export default function RootLayout() {
     return (
         <ThemeProvider>
             <ThemeGate>
-                <ThemedPaperProvider>
-                    <LanguageProvider>
-                        <AuthProvider>
-                            <DrawerProvider>
+                <LanguageProvider>
+                    <AuthProvider>
+                        <DrawerProvider>
+                            {/* Paper is inside the other providers, so popups
+                                (Modal, Dialog) can use useAuth, useLanguage... */}
+                            <ThemedPaperProvider>
                                 <AppNavigator />
-                            </DrawerProvider>
-                        </AuthProvider>
-                    </LanguageProvider>
-                </ThemedPaperProvider>
+                            </ThemedPaperProvider>
+                        </DrawerProvider>
+                    </AuthProvider>
+                </LanguageProvider>
             </ThemeGate>
         </ThemeProvider>
     );
