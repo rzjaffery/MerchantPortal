@@ -9,7 +9,19 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F3F4F6",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.samreenkoondhar.merchantportal",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "192.168.100.115": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        },
+        "NSLocalNetworkUsageDescription": "Merchant Portal connects to the Vaulsys server on your office network."
+      }
     },
     "android": {
       "adaptiveIcon": {
