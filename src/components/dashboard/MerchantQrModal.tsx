@@ -114,6 +114,12 @@ export default function MerchantQrModal({
     // Rows under the QR. A row with no value is left out.
     const rows = [
         {
+            key: 'location',
+            label: t('location'),
+            value: location,
+            copyValue: '',
+        },
+        {
             key: 'merchantId',
             label: t('merchantId'),
             value: profile?.merchantId || merchantId,
@@ -125,18 +131,12 @@ export default function MerchantQrModal({
             value: profile?.merchantCode ?? '',
             copyValue: profile?.merchantCode ?? '',
         },
-        {
-            key: 'mobile',
-            label: t('mobileNumber'),
-            value: maskMobile(profile?.mobileNumber ?? ''),
-            copyValue: '',
-        },
-        {
-            key: 'location',
-            label: t('location'),
-            value: location,
-            copyValue: '',
-        },
+        // {
+        //     key: 'mobile',
+        //     label: t('mobileNumber'),
+        //     value: maskMobile(profile?.mobileNumber ?? ''),
+        //     copyValue: '',
+        // },
     ].filter((row) => row.value !== '');
 
     async function handleCopy(key: string, value: string) {
@@ -176,22 +176,22 @@ export default function MerchantQrModal({
                         ) : null}
                     </View>
 
-                    <Pressable
-                        onPress={() => void handleShare()}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('share')}
-                        hitSlop={8}
-                        style={({ pressed }) => [
-                            styles.shareButton,
-                            pressed && styles.pressed,
-                        ]}
-                    >
-                        <SymbolView
-                            name={icons.share}
-                            size={20}
-                            tintColor={colors.brand.primary}
-                        />
-                    </Pressable>
+                    {/*<Pressable*/}
+                    {/*    onPress={() => void handleShare()}*/}
+                    {/*    accessibilityRole="button"*/}
+                    {/*    accessibilityLabel={t('share')}*/}
+                    {/*    hitSlop={8}*/}
+                    {/*    style={({ pressed }) => [*/}
+                    {/*        styles.shareButton,*/}
+                    {/*        pressed && styles.pressed,*/}
+                    {/*    ]}*/}
+                    {/*>*/}
+                    {/*    <SymbolView*/}
+                    {/*        name={icons.share}*/}
+                    {/*        size={20}*/}
+                    {/*        tintColor={colors.brand.primary}*/}
+                    {/*    />*/}
+                    {/*</Pressable>*/}
                 </View>
 
                 <Text style={styles.message}>{t('scanQrToPay')}</Text>
@@ -288,17 +288,19 @@ const createStyles = (colors: AppColors) =>
 
         headerText: {
             flex: 1,
+            alignItems: 'center',
         },
 
         username: {
             fontFamily: fontFamilies.bold,
-            fontSize: 20,
+            fontSize: 30,
             color: colors.text.primary,
+            fontWeight: 'bold',
         },
 
         subheading: {
             fontFamily: fontFamilies.medium,
-            fontSize: 12,
+            fontSize: 20,
             color: colors.brand.primary,
         },
 
