@@ -284,10 +284,10 @@ const createStyles = (colors: AppColors) =>
         },
 
         chip: {
-            paddingHorizontal: spacing.lg,
+            paddingHorizontal: spacing.md,
             paddingVertical: spacing.sm,
-            borderRadius: radius.full,
-            borderWidth: 1,
+            borderRadius: radius.md,
+            borderWidth: 2,
             borderColor: colors.border,
             backgroundColor: colors.surface,
         },
@@ -345,7 +345,7 @@ const createStyles = (colors: AppColors) =>
 
         chartNote: {
             fontFamily: fontFamilies.regular,
-            fontSize: 10,
+            fontSize: 11,
             color: colors.text.secondary,
             marginTop: spacing.sm,
         },
@@ -358,13 +358,13 @@ const createStyles = (colors: AppColors) =>
 
         cardTitle: {
             fontFamily: fontFamilies.semiBold,
-            fontSize: 14,
+            fontSize: 20,
             color: colors.text.primary,
         },
 
         cardMeta: {
             fontFamily: fontFamilies.medium,
-            fontSize: 11,
+            fontSize: 15,
             color: colors.text.secondary,
         },
 
@@ -430,9 +430,9 @@ const createStyles = (colors: AppColors) =>
 
         amountLabel: {
             fontFamily: fontFamilies.medium,
-            fontSize: 11,
+            fontSize: 15,
             color: colors.text.secondary,
-            textAlign: 'right',
+            textAlign: 'left',
         },
 
         amountValueRow: {
@@ -447,14 +447,14 @@ const createStyles = (colors: AppColors) =>
             // Lets the number shrink instead of pushing out of the card.
             flexShrink: 1,
             fontFamily: fontFamilies.bold,
-            fontSize: 16,
+            fontSize: 17,
             color: colors.text.primary,
             textAlign: 'right',
         },
 
         amountCurrency: {
             fontFamily: fontFamilies.semiBold,
-            fontSize: 10,
+            fontSize: 13,
             color: colors.text.secondary,
         },
 
