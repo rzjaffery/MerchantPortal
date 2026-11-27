@@ -226,6 +226,20 @@ export default function AppDrawer({ visible, onClose }: AppDrawerProps) {
                         <Text style={styles.appName}>
                             Merchant Portal
                         </Text>
+                        {/* Burger button: closes the drawer */}
+                        <Pressable
+                            onPress={handleClose}
+                            hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel="Close menu"
+                            style={styles.closeButton}
+                        >
+                            <SymbolView
+                                name={{ ios: 'line.3.horizontal', android: 'menu', web: 'menu' }}
+                                size={24}
+                                tintColor={colors.text.primary}
+                            />
+                        </Pressable>
                     </View>
 
                     {/*/!* Search *!/*/}
@@ -402,9 +416,18 @@ const createStyles = (colors: AppColors) =>
         },
 
         appName: {
+            flex: 1,
             fontFamily: fontFamilies.semiBold,
             fontSize: 16,
             color: colors.text.primary,
+        },
+
+        closeButton: {
+            width: 40,
+            height: 40,
+            borderRadius: radius.full,
+            alignItems: 'center',
+            justifyContent: 'center',
         },
 
         searchBox: {

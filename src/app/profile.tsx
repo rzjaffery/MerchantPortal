@@ -127,8 +127,8 @@ export default function ProfileScreen() {
     }
 
     // The website shows type 1 as "Merchant". Other codes are shown as sent.
-    const typeKey = merchantTypeKey(merchantType);
-    const merchantTypeLabel = typeKey ? t(typeKey) : merchantType;
+    // const typeKey = merchantTypeKey(merchantType);
+    // const merchantTypeLabel = typeKey ? t(typeKey) : merchantType;
 
     // Rows with no value are left out.
     const infoRows = [
@@ -138,12 +138,12 @@ export default function ProfileScreen() {
             label: t('loginTime'),
             value: loginTime ? formatLoginTime(loginTime) : '',
         },
-        {
-            key: 'type',
-            icon: icons.store,
-            label: t('merchantType'),
-            value: merchantTypeLabel,
-        },
+        // {
+        //     key: 'type',
+        //     icon: icons.store,
+        //     label: t('merchantType'),
+        //     value: merchantTypeLabel,
+        // },
     ].filter((row) => row.value !== '');
 
     // Actions in the card. A row with no onPress is not built yet.
@@ -158,7 +158,7 @@ export default function ProfileScreen() {
         ...(merchantType === '4'
             ? []
             : [
-                { key: 'updatePin', icon: icons.lock, title: t('updatePin') },
+                // { key: 'updatePin', icon: icons.lock, title: t('updatePin') },
                 {
                     key: 'resetPin',
                     icon: icons.lock,
