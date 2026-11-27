@@ -20,7 +20,8 @@
             }
           }
         },
-        "NSLocalNetworkUsageDescription": "Merchant Portal connects to the Vaulsys server on your office network."
+        "NSLocalNetworkUsageDescription": "Merchant Portal connects to the Vaulsys server on your office network.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -53,6 +54,16 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "4a72100c-a3cc-4125-b4dd-fa285d4e9f45"
+      }
     }
   }
 }
