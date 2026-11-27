@@ -4,13 +4,13 @@
     "slug": "MerchantPortal",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/illico_cash.png",
     "scheme": "merchantportal",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F3F4F6",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.samreenkoondhar.merchantportal",
+      "bundleIdentifier": "com.vaulsys.merchantportal",
+      "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true,
